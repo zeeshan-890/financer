@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { Mail, Shield } from 'lucide-react';
 
-export default function VerifyOTPPage() {
+function VerifyOTPContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, login } = useAuthStore();
@@ -158,5 +158,20 @@ export default function VerifyOTPPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function VerifyOTPPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950">
+                <div className="text-center">
+                    <Shield className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
+                    <p className="text-zinc-600 dark:text-zinc-400">Loading...</p>
+                </div>
+            </div>
+        }>
+            <VerifyOTPContent />
+        </Suspense>
     );
 }

@@ -75,7 +75,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
     };
 
     const calculateEqualSplit = () => {
-        if (!totalAmount || selectedFriends.length === 0) return 0;
+        if (!totalAmount || selectedFriends.length === 0) return '0';
         return (parseFloat(totalAmount) / selectedFriends.length).toFixed(2);
     };
 

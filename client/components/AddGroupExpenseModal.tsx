@@ -260,8 +260,8 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                             type="button"
                                             onClick={() => setSplitMode('equal')}
                                             className={`flex-1 rounded-md border-2 px-4 py-2 text-sm font-medium ${splitMode === 'equal'
-                                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20'
-                                                    : 'border-zinc-200 text-zinc-600'
+                                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20'
+                                                : 'border-zinc-200 text-zinc-600'
                                                 }`}
                                         >
                                             Equal Split (₹{calculateEqualSplit()} each)
@@ -270,8 +270,8 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                             type="button"
                                             onClick={() => setSplitMode('custom')}
                                             className={`flex-1 rounded-md border-2 px-4 py-2 text-sm font-medium ${splitMode === 'custom'
-                                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20'
-                                                    : 'border-zinc-200 text-zinc-600'
+                                                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20'
+                                                : 'border-zinc-200 text-zinc-600'
                                                 }`}
                                         >
                                             Custom Amounts

@@ -20,16 +20,16 @@
     "react-hot-toast": "^2.6.0",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.6.0",
-    "zustand": "^5.0.2"
-  },
-  "devDependencies": {
+    "zustand": "^5.0.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.0.0"
   }
 }

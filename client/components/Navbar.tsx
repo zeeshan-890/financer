@@ -12,7 +12,8 @@ export default function Navbar() {
     const { user, isAuthenticated, logout } = useAuthStore();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    if (!isAuthenticated) return null;
+    // Hide navbar on admin pages and if not authenticated
+    if (!isAuthenticated || pathname?.startsWith('/admin')) return null;
 
     return (
         <nav className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 sticky top-0 z-50">

@@ -121,11 +121,11 @@ export default function TransactionsPage() {
                 {showFilters && (
                     <Card className="mb-6">
                         <CardHeader>
-                            <CardTitle>Filters</CardTitle>
+                            <CardTitle className="text-lg">Filters</CardTitle>
                             <CardDescription>Filter transactions by type, category, and date</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
                                     <Label>Type</Label>
                                     <select
@@ -159,7 +159,7 @@ export default function TransactionsPage() {
                                 </div>
                             </div>
 
-                            <Button onClick={clearFilters} variant="outline" className="mt-4">
+                            <Button onClick={clearFilters} variant="outline" className="mt-4 w-full sm:w-auto">
                                 Clear Filters
                             </Button>
                         </CardContent>

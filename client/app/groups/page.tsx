@@ -242,14 +242,14 @@ export default function GroupExpensesPage() {
     }, 0);
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-6">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
             <div className="mx-auto max-w-7xl">
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Group Expenses</h1>
-                        <p className="text-zinc-600 dark:text-zinc-400">Split expenses with friends and track payments</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Group Expenses</h1>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">Split expenses with friends and track payments</p>
                     </div>
-                    <Button onClick={() => setShowAddModal(true)}>
+                    <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Expense
                     </Button>

@@ -79,47 +79,47 @@ export default function DashboardPage() {
         : [];
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-6">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
             <div className="mx-auto max-w-7xl">
-                <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard</h1>
-                    <Button onClick={() => setShowAddModal(true)}>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard</h1>
+                    <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Transaction
                     </Button>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="mb-6 grid gap-4 md:grid-cols-3">
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="pb-3">
                             <CardDescription>Total Balance</CardDescription>
-                            <CardTitle className="text-3xl">₹{stats?.balance.toLocaleString() || 0}</CardTitle>
+                            <CardTitle className="text-2xl sm:text-3xl">₹{stats?.balance.toLocaleString() || 0}</CardTitle>
                         </CardHeader>
                     </Card>
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="pb-3">
                             <CardDescription>Total Income</CardDescription>
-                            <CardTitle className="text-3xl text-green-600">₹{stats?.income.toLocaleString() || 0}</CardTitle>
+                            <CardTitle className="text-2xl sm:text-3xl text-green-600">₹{stats?.income.toLocaleString() || 0}</CardTitle>
                         </CardHeader>
                     </Card>
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="pb-3">
                             <CardDescription>Total Expenses</CardDescription>
-                            <CardTitle className="text-3xl text-red-600">₹{stats?.expenses.toLocaleString() || 0}</CardTitle>
+                            <CardTitle className="text-2xl sm:text-3xl text-red-600">₹{stats?.expenses.toLocaleString() || 0}</CardTitle>
                         </CardHeader>
                     </Card>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 lg:grid-cols-2">
                     {/* Category Pie Chart */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Spending by Category</CardTitle>
+                            <CardTitle className="text-lg sm:text-xl">Spending by Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                             {categoryData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ResponsiveContainer width="100%" height={250}>
                                     <PieChart>
                                         <Pie
                                             data={categoryData}
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                                             cy="50%"
                                             labelLine={false}
                                             label={(entry) => entry.name}
-                                            outerRadius={80}
+                                            outerRadius={70}
                                             fill="#8884d8"
                                             dataKey="value"
                                         >
@@ -139,7 +139,7 @@ export default function DashboardPage() {
                                     </PieChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <p className="text-center text-zinc-500 py-10">No expense data yet</p>
+                                <p className="text-center text-zinc-500 py-10 text-sm">No expense data yet</p>
                             )}
                         </CardContent>
                     </Card>
@@ -147,21 +147,21 @@ export default function DashboardPage() {
                     {/* Monthly Trends */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Monthly Trends</CardTitle>
+                            <CardTitle className="text-lg sm:text-xl">Monthly Trends</CardTitle>
                         </CardHeader>
                         <CardContent>
                             {stats?.monthlyData && stats.monthlyData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ResponsiveContainer width="100%" height={250}>
                                     <BarChart data={stats.monthlyData}>
-                                        <XAxis dataKey="month" />
-                                        <YAxis />
+                                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                                        <YAxis tick={{ fontSize: 12 }} />
                                         <Tooltip />
                                         <Legend />
                                         <Bar dataKey="expense" fill="#3b82f6" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <p className="text-center text-zinc-500 py-10">No monthly data yet</p>
+                                <p className="text-center text-zinc-500 py-10 text-sm">No monthly data yet</p>
                             )}
                         </CardContent>
                     </Card>

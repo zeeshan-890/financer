@@ -186,9 +186,9 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-6">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
             <div className="mx-auto max-w-3xl">
-                <h1 className="mb-6 text-3xl font-bold text-zinc-900 dark:text-zinc-50">Settings</h1>
+                <h1 className="mb-6 text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Settings</h1>
 
                 <div className="space-y-6">
                     {/* Profile Settings */}
@@ -283,7 +283,7 @@ export default function SettingsPage() {
                                     <div className="space-y-3">
                                         <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">Add friend details</p>
 
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div>
                                                 <Label htmlFor="friendName">Name *</Label>
                                                 <Input
@@ -305,7 +305,7 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div>
                                                 <Label htmlFor="friendPhone">Phone</Label>
                                                 <Input
@@ -326,7 +326,7 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div>
                                                 <Label htmlFor="friendBatch">Batch/Year</Label>
                                                 <Input

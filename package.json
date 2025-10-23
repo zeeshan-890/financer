@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "description": "Financer - Personal and Group Finance Management Platform",
     "scripts": {
-        "build": "cd client && npm install && npm run build && cd ../server && npm install",
+        "build": "cd client && npm install && npm run build && xcopy /E /I /Y out ..\\server\\public && cd ../server && npm install",
         "start": "cd server && npm start",
-        "heroku-postbuild": "cd client && npm install && npm run build && cd ../server && npm install"
+        "heroku-postbuild": "cd client && npm install && npm run build && cp -r out/* ../server/public/ && cd ../server && npm install"
     },
     "engines": {
         "node": "20.x",

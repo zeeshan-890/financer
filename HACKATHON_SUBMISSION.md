@@ -523,9 +523,9 @@ AI: Created this comprehensive submission document
 
 **GitHub Repository:** https://github.com/zeeshan-890/financer  
 **Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link 
-**Developer:** Zeeshan  
+**Developer:** Zeeshan Abbas
 **Email:** zzabbaskhan830@gmail.com  
-**Hackathon:** NYU Vibe Coding Hackathon 2025
+**Hackathon:** NYU Vibe Coding Hackathon 2025.
 
 ---
 

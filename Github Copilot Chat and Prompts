@@ -502,7 +502,7 @@ Created [](file:///c%3A/Users/zeeshan/Desktop/web%20develpment/vibecoding/financ
 Now let me install the dependencies and update the todo list: 
 
 Completed (1/10) *Install frontend dependencies*
-
+.
 Ran terminal command: cd client; npm install
 
 NextAuth 4 doesn't support Next.js 16 yet. Let me remove next-auth and use a simpler JWT-based auth approach that's already implemented: 

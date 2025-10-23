@@ -1892,19 +1892,6 @@ If you find this project useful, please consider giving it a ⭐ on GitHub!
 
 ---
 
-## 📸 Screenshots
-
-### Landing Page
-[Add screenshot here]
-
-### Dashboard
-[Add screenshot here]
-
-### Group Expenses
-[Add screenshot here]
-
-### Savings Goals
-[Add screenshot here]
 
 ---
 

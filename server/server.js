@@ -40,10 +40,10 @@ app.get('*', (req, res) => {
     // Try to serve the specific HTML file first
     const requestedPath = req.path === '/' ? '/index.html' : req.path;
     const filePath = path.join(__dirname, 'public', requestedPath);
-    
+
     // Check if a .html file exists for this path
     const htmlPath = requestedPath.endsWith('.html') ? filePath : filePath + '.html';
-    
+
     // Check common Next.js export patterns
     const possiblePaths = [
         filePath,
@@ -52,14 +52,14 @@ app.get('*', (req, res) => {
         path.join(__dirname, 'public', requestedPath.replace(/\/$/, ''), 'index.html'),
         path.join(__dirname, 'public', 'index.html') // fallback
     ];
-    
+
     const fs = require('fs');
     for (const p of possiblePaths) {
         if (fs.existsSync(p) && fs.statSync(p).isFile()) {
             return res.sendFile(p);
         }
     }
-    
+
     // Default fallback to root index.html for SPA routing
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

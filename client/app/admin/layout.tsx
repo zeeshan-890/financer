@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard - Financer",
-  description: "Admin panel for monitoring requests and analytics",
+    title: "Admin Dashboard - Financer",
+    description: "Admin panel for monitoring requests and analytics",
 };
 
 export default function AdminLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+    return <>{children}</>;
 }

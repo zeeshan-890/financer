@@ -5,7 +5,8 @@
 **Project Name:** Financer - Personal and Group Finance Management Platform  
 **Team Member:** Zeeshan  
 **Submission Date:** October 23, 2025  
-**Repository:** https://github.com/zeeshan-890/financer
+**Repository :** https://github.com/zeeshan-890/financer
+**Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link
 
 ---
 
@@ -326,7 +327,7 @@ financer/
 
 ## 🎬 Demo Video
 
-**Video Link:** [Upload your 1-minute demo video to YouTube/Vimeo and add link here]
+**Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link
 
 **Video Content Should Cover:**
 1. Landing page and registration flow (0:00-0:15)
@@ -521,9 +522,9 @@ AI: Created this comprehensive submission document
 ## 📞 Contact & Links
 
 **GitHub Repository:** https://github.com/zeeshan-890/financer  
-**Live Demo:** [Add Heroku URL after deployment]  
+**Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link 
 **Developer:** Zeeshan  
-**Email:** [Your email for hackathon contact]  
+**Email:** zzabbaskhan830@gmail.com  
 **Hackathon:** NYU Vibe Coding Hackathon 2025
 
 ---

@@ -17,6 +17,9 @@
 </p>
 
 ---
+**Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link
+
+**Deployed Website  :** https://financerzeeshanabbas-512be7f5802e.herokuapp.com/
 
 ## 📖 Table of Contents
 
@@ -390,7 +393,7 @@ npm run dev
 npm start
 ```
 
-Server will start at: `http://localhost:5000`
+Server will start at: `
 
 ✅ You should see:
 ```

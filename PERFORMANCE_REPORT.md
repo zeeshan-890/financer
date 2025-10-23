@@ -5,8 +5,8 @@
 **Hackathon:** NYU Vibe Coding Hackathon  
 **AI Used:** GitHub Copilot (Claude Sonnet 4.5)
 **Github :** (https://github.com/zeeshan-890/financer)
-**Website Link :** (https://financerzeeshanabbas-512be7f5802e.herokuapp.com/)
-**Demo Video Kink :** GitHub Copilot (Claude Sonnet 4.5)
+**Website Link :** https://financerzeeshanabbas-512be7f5802e.herokuapp.com/
+ **Demo video :** https://drive.google.com/file/d/1mSBeeYdNPLHPg7rEoVgTLOE4FtOnLxDi/view?usp=drive_link
 
 
 ---

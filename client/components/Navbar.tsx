@@ -68,42 +68,42 @@ export default function Navbar() {
             {mobileMenuOpen && (
                 <div className="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
                     <div className="px-4 py-3 space-y-1">
-                        <MobileNavLink 
-                            href="/dashboard" 
+                        <MobileNavLink
+                            href="/dashboard"
                             active={pathname === '/dashboard'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Dashboard
                         </MobileNavLink>
-                        <MobileNavLink 
-                            href="/groups" 
+                        <MobileNavLink
+                            href="/groups"
                             active={pathname === '/groups'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Groups
                         </MobileNavLink>
-                        <MobileNavLink 
-                            href="/transactions" 
+                        <MobileNavLink
+                            href="/transactions"
                             active={pathname === '/transactions'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Transactions
                         </MobileNavLink>
-                        <MobileNavLink 
-                            href="/goals" 
+                        <MobileNavLink
+                            href="/goals"
                             active={pathname === '/goals'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Goals
                         </MobileNavLink>
-                        <MobileNavLink 
-                            href="/settings" 
+                        <MobileNavLink
+                            href="/settings"
                             active={pathname === '/settings'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Settings
                         </MobileNavLink>
-                        
+
                         <div className="pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-800">
                             <div className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400">
                                 <User className="h-4 w-4" />
@@ -132,8 +132,8 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
         <Link
             href={href}
             className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${active
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
-                    : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
                 }`}
         >
             {children}
@@ -141,24 +141,24 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
     );
 }
 
-function MobileNavLink({ 
-    href, 
-    active, 
+function MobileNavLink({
+    href,
+    active,
     onClick,
-    children 
-}: { 
-    href: string; 
-    active: boolean; 
+    children
+}: {
+    href: string;
+    active: boolean;
     onClick: () => void;
-    children: React.ReactNode 
+    children: React.ReactNode
 }) {
     return (
         <Link
             href={href}
             onClick={onClick}
             className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${active
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
-                    : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
                 }`}
         >
             {children}

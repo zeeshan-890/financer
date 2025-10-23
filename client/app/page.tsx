@@ -258,7 +258,7 @@ export default function Home() {
             <p className="text-zinc-600 dark:text-zinc-400">
               © 2025 Financer. All rights reserved.
             </p>
-            
+
           </div>
         </div>
       </footer>

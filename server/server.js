@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const path = require('path');
 const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
+const requestLogger = require('./middlewares/requestLogger');
 
 const app = express();
 
@@ -17,6 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan('dev'));
 
+// Request logger middleware (logs all requests)
+app.use(requestLogger);
+
 // API Routes
 const validateRequest = require('./middlewares/validateRequest');
 const { registerSchema, loginSchema } = require('./utils/validators');
@@ -26,6 +30,7 @@ app.use('/api/groups', require('./routes/groupRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/goals', require('./routes/goalRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Serve static files from Next.js build
 app.use(express.static(path.join(__dirname, 'public')));

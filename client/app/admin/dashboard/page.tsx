@@ -20,16 +20,16 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 
-    (typeof window !== 'undefined' && window.location.origin ? 
-    `${window.location.origin}/api` : 'http://localhost:5000/api');
+const API_URL = process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== 'undefined' && window.location.origin ?
+        `${window.location.origin}/api` : 'http://localhost:5000/api');
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any>(null);
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [logsLoading, setLogsLoading] = useState(false);
-    
+
     // Filters
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);

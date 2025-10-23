@@ -6,13 +6,14 @@ exports.getAllLogs = async (req, res) => {
     try {
         const {
             page = 1,
-            limit = 50,
+            limit = 20,
             method,
             status,
             ip,
             startDate,
             endDate,
-            url
+            url,
+            category
         } = req.query;
 
         const filter = {};
@@ -21,12 +22,32 @@ exports.getAllLogs = async (req, res) => {
         if (status) filter.statusCode = parseInt(status);
         if (ip) filter.ip = new RegExp(ip, 'i');
         if (url) filter.url = new RegExp(url, 'i');
+
+        // Category filter
+        if (category) {
+            const categoryPatterns = {
+                'Authentication': /\/auth/i,
+                'Transactions': /\/transaction/i,
+                'Goals': /\/goal/i,
+                'Groups': /\/group/i,
+                'Users': /\/user/i,
+                'Reminders': /\/reminder/i,
+                'Admin': /\/admin/i,
+                'Static': /\/_next|\.js$|\.css$|\.ico$|\.svg$|\.png$|\.jpg$/i,
+                'Other': /^(?!.*\/(auth|transaction|goal|group|user|reminder|admin|_next|\.(js|css|ico|svg|png|jpg))).*$/i
+            };
+            if (categoryPatterns[category]) {
+                filter.url = categoryPatterns[category];
+            }
+        }
+
         if (startDate || endDate) {
             filter.timestamp = {};
             if (startDate) filter.timestamp.$gte = new Date(startDate);
             if (endDate) filter.timestamp.$lte = new Date(endDate);
         }
 
+        // Sort by timestamp descending (latest first)
         const logs = await RequestLog.find(filter)
             .populate('userId', 'name email')
             .sort({ timestamp: -1 })

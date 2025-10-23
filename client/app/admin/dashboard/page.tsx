@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,10 @@ import {
     Users,
     Filter,
     Download,
-    RefreshCw
+    RefreshCw,
+    Tablet,
+    Tv,
+    Watch
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -29,24 +32,59 @@ export default function AdminDashboard() {
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [logsLoading, setLogsLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const observerTarget = useRef(null);
 
     // Filters
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [methodFilter, setMethodFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [ipFilter, setIpFilter] = useState('');
     const [urlFilter, setUrlFilter] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         fetchStats();
-        fetchLogs();
+        fetchLogs(1, true);
     }, []);
 
     useEffect(() => {
-        fetchLogs();
-    }, [page, methodFilter, statusFilter, ipFilter, urlFilter]);
+        if (methodFilter || statusFilter || ipFilter || urlFilter || categoryFilter) {
+            setLogs([]);
+            setPage(1);
+            setHasMore(true);
+            fetchLogs(1, true);
+        }
+    }, [methodFilter, statusFilter, ipFilter, urlFilter, categoryFilter]);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMore && !logsLoading) {
+                    setPage(prev => prev + 1);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => {
+            if (observerTarget.current) {
+                observer.unobserve(observerTarget.current);
+            }
+        };
+    }, [hasMore, logsLoading]);
+
+    useEffect(() => {
+        if (page > 1) {
+            fetchLogs(page, false);
+        }
+    }, [page]);
 
     const fetchStats = async () => {
         try {
@@ -60,18 +98,25 @@ export default function AdminDashboard() {
         }
     };
 
-    const fetchLogs = async () => {
+    const fetchLogs = async (pageNum: number, reset: boolean = false) => {
         try {
             setLogsLoading(true);
-            const params: any = { page, limit: 50 };
+            const params: any = { page: pageNum, limit: 20 };
             if (methodFilter) params.method = methodFilter;
             if (statusFilter) params.status = statusFilter;
             if (ipFilter) params.ip = ipFilter;
             if (urlFilter) params.url = urlFilter;
+            if (categoryFilter) params.category = categoryFilter;
 
             const res = await axios.get(`${API_URL}/admin/logs`, { params });
-            setLogs(res.data.logs);
-            setTotalPages(res.data.totalPages);
+
+            if (reset) {
+                setLogs(res.data.logs);
+            } else {
+                setLogs(prev => [...prev, ...res.data.logs]);
+            }
+
+            setHasMore(pageNum < res.data.totalPages);
         } catch (error) {
             console.error('Error fetching logs:', error);
         } finally {
@@ -84,7 +129,10 @@ export default function AdminDashboard() {
         setStatusFilter('');
         setIpFilter('');
         setUrlFilter('');
+        setCategoryFilter('');
+        setLogs([]);
         setPage(1);
+        setHasMore(true);
     };
 
     const getStatusColor = (status: number) => {
@@ -103,6 +151,41 @@ export default function AdminDashboard() {
             PATCH: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20'
         };
         return colors[method] || 'text-zinc-600 bg-zinc-50 dark:bg-zinc-900/20';
+    };
+
+    const getCategoryColor = (category: string) => {
+        const colors: any = {
+            Authentication: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20',
+            Transactions: 'text-green-600 bg-green-50 dark:bg-green-900/20',
+            Goals: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
+            Groups: 'text-orange-600 bg-orange-50 dark:bg-orange-900/20',
+            Users: 'text-pink-600 bg-pink-50 dark:bg-pink-900/20',
+            Reminders: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20',
+            Admin: 'text-red-600 bg-red-50 dark:bg-red-900/20',
+            Static: 'text-zinc-500 bg-zinc-50 dark:bg-zinc-900/20'
+        };
+        return colors[category] || 'text-zinc-600 bg-zinc-50 dark:bg-zinc-900/20';
+    };
+
+    const getDeviceIcon = (device: string) => {
+        const deviceLower = device?.toLowerCase() || '';
+        if (deviceLower.includes('mobile') || deviceLower.includes('phone')) return <Smartphone className="h-3 w-3" />;
+        if (deviceLower.includes('tablet')) return <Tablet className="h-3 w-3" />;
+        if (deviceLower.includes('tv')) return <Tv className="h-3 w-3" />;
+        if (deviceLower.includes('watch')) return <Watch className="h-3 w-3" />;
+        return <Monitor className="h-3 w-3" />;
+    };
+
+    const categorizeRequest = (url: string) => {
+        if (url.includes('/auth')) return 'Authentication';
+        if (url.includes('/transaction')) return 'Transactions';
+        if (url.includes('/goal')) return 'Goals';
+        if (url.includes('/group')) return 'Groups';
+        if (url.includes('/user')) return 'Users';
+        if (url.includes('/reminder')) return 'Reminders';
+        if (url.includes('/admin')) return 'Admin';
+        if (url.includes('/_next') || url.includes('.js') || url.includes('.css') || url.includes('.ico')) return 'Static';
+        return 'Other';
     };
 
     if (loading) {
@@ -305,7 +388,27 @@ export default function AdminDashboard() {
                         {/* Filters */}
                         {showFilters && (
                             <div className="mb-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                                    <div>
+                                        <Label htmlFor="category">Category</Label>
+                                        <select
+                                            id="category"
+                                            value={categoryFilter}
+                                            onChange={(e) => setCategoryFilter(e.target.value)}
+                                            className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                                        >
+                                            <option value="">All Categories</option>
+                                            <option value="Authentication">Authentication</option>
+                                            <option value="Transactions">Transactions</option>
+                                            <option value="Goals">Goals</option>
+                                            <option value="Groups">Groups</option>
+                                            <option value="Users">Users</option>
+                                            <option value="Reminders">Reminders</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Static">Static Files</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
                                     <div>
                                         <Label htmlFor="method">Method</Label>
                                         <select
@@ -358,86 +461,83 @@ export default function AdminDashboard() {
 
                         {/* Logs Table */}
                         <div className="overflow-x-auto">
-                            {logsLoading ? (
-                                <div className="text-center py-8">
-                                    <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
-                                    <p className="text-sm text-zinc-500">Loading logs...</p>
-                                </div>
-                            ) : logs.length === 0 ? (
+                            {logs.length === 0 && !logsLoading ? (
                                 <p className="text-center py-8 text-zinc-500">No logs found</p>
                             ) : (
                                 <div className="space-y-2">
-                                    {logs.map((log) => (
-                                        <div
-                                            key={log._id}
-                                            className="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:shadow-md transition-shadow"
-                                        >
-                                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(log.method)}`}>
-                                                            {log.method}
-                                                        </span>
-                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(log.statusCode)}`}>
-                                                            {log.statusCode}
-                                                        </span>
-                                                        <span className="text-xs text-zinc-600 dark:text-zinc-400 font-mono break-all">
-                                                            {log.url}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 flex-wrap text-xs text-zinc-500 dark:text-zinc-400">
-                                                        <span className="flex items-center gap-1">
-                                                            <Globe className="h-3 w-3" />
-                                                            {log.ip}
-                                                        </span>
-                                                        <span>{log.browser}</span>
-                                                        <span>{log.os}</span>
-                                                        <span>{log.device}</span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock className="h-3 w-3" />
-                                                            {log.responseTime}ms
-                                                        </span>
-                                                    </div>
-                                                    {log.userId && (
-                                                        <div className="text-xs text-blue-600 dark:text-blue-400">
-                                                            User: {log.userId.name} ({log.userId.email})
+                                    {logs.map((log) => {
+                                        const category = categorizeRequest(log.url);
+                                        return (
+                                            <div
+                                                key={log._id}
+                                                className="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:shadow-md transition-shadow"
+                                            >
+                                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(category)}`}>
+                                                                {category}
+                                                            </span>
+                                                            <span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(log.method)}`}>
+                                                                {log.method}
+                                                            </span>
+                                                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(log.statusCode)}`}>
+                                                                {log.statusCode}
+                                                            </span>
+                                                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-mono break-all">
+                                                                {log.url}
+                                                            </span>
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs text-zinc-500 dark:text-zinc-400 text-right">
-                                                    {new Date(log.timestamp).toLocaleString()}
+                                                        <div className="flex items-center gap-4 flex-wrap text-xs text-zinc-500 dark:text-zinc-400">
+                                                            <span className="flex items-center gap-1">
+                                                                <Globe className="h-3 w-3" />
+                                                                {log.ip}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                {getDeviceIcon(log.device)}
+                                                                {log.device}
+                                                            </span>
+                                                            <span>{log.browser}</span>
+                                                            <span>{log.os}</span>
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock className="h-3 w-3" />
+                                                                {log.responseTime}ms
+                                                            </span>
+                                                        </div>
+                                                        {log.userId && (
+                                                            <div className="text-xs text-blue-600 dark:text-blue-400">
+                                                                User: {log.userId.name} ({log.userId.email})
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-zinc-500 dark:text-zinc-400 text-right whitespace-nowrap">
+                                                        {new Date(log.timestamp).toLocaleString()}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Loading indicator for infinite scroll */}
+                            {logsLoading && (
+                                <div className="text-center py-8">
+                                    <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+                                    <p className="text-sm text-zinc-500">Loading more logs...</p>
+                                </div>
+                            )}
+
+                            {/* Intersection observer target */}
+                            <div ref={observerTarget} className="h-4" />
+
+                            {/* No more logs indicator */}
+                            {!hasMore && logs.length > 0 && (
+                                <div className="text-center py-6">
+                                    <p className="text-sm text-zinc-500">No more logs to load</p>
                                 </div>
                             )}
                         </div>
-
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="mt-6 flex items-center justify-center gap-2">
-                                <Button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    variant="outline"
-                                    size="sm"
-                                >
-                                    Previous
-                                </Button>
-                                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                                    Page {page} of {totalPages}
-                                </span>
-                                <Button
-                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={page === totalPages}
-                                    variant="outline"
-                                    size="sm"
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
             </div>

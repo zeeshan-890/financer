@@ -72,10 +72,10 @@ exports.createRequest = async (req, res) => {
                 if (bankAccount.balance < amount) {
                     return res.status(400).json({ message: 'Insufficient balance in bank account' });
                 }
-                
+
                 bankAccount.balance -= amount;
                 await bankAccount.save();
-                
+
                 requestData.bankAccountId = bankAccountId;
                 requestData.bankAccountName = bankAccount.accountName;
                 requestData.bankAccountNumber = bankAccount.accountNumber;

@@ -98,20 +98,20 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
             return;
         }
 
-                        // Validate custom amounts
+        // Validate custom amounts
         if (splitMode === 'custom') {
             const total = selectedFriends.reduce((sum, id) => sum + parseFloat(customAmounts[id] || '0'), 0);
             if (Math.abs(total - parseFloat(totalAmount)) > 0.01) {
                 setError(`Custom amounts (PKR ${total.toFixed(2)}) must equal total amount (PKR ${totalAmount})`);
                 return;
             }
-        }        setLoading(true);
+        } setLoading(true);
 
         try {
             // Prepare split data from contacts only
             const splitBetween = selectedFriends.map((friendId) => {
                 const contact = contacts.find((c) => c._id === friendId);
-                
+
                 return {
                     userId: friendId,
                     name: contact?.name || 'Unknown',
@@ -294,7 +294,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                         <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                                             {selectedFriends.map((friendId) => {
                                                 const contact = contacts.find((c) => c._id === friendId);
-                                                
+
                                                 return (
                                                     <div key={friendId} className="flex items-center gap-2">
                                                         <span className="flex-1 text-sm">{contact?.name || 'Unknown'}</span>

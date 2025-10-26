@@ -367,7 +367,7 @@ export default function ReservedMoneyPage() {
                                         <select
                                             value={formData.friendId}
                                             onChange={(e) => handleFriendSelect(e.target.value)}
-                                            className="w-full p-2 border rounded-md"
+                                            className="w-full p-2 border rounded-md bg-white dark:bg-zinc-950 dark:border-zinc-800"
                                             required
                                         >
                                             <option className='bg-gray-900 text-white' value="">Choose a contact...</option>
@@ -443,7 +443,7 @@ export default function ReservedMoneyPage() {
                                         value={formData.notes}
                                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                         placeholder="Additional notes..."
-                                        className="w-full p-2 border rounded-md"
+                                        className="w-full p-2 border rounded-md bg-white dark:bg-zinc-950 dark:border-zinc-800"
                                         rows={3}
                                     />
                                 </div>

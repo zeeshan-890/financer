@@ -55,16 +55,29 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+            
             const [groupsRes, contactsRes] = await Promise.all([
                 groupApi.getAllGroups(),
                 fetch('/api/contacts', {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 })
             ]);
+            
             setGroups(groupsRes.data);
+            
             if (contactsRes.ok) {
                 const contactsData = await contactsRes.json();
+                console.log('Contacts fetched:', contactsData);
                 setContacts(contactsData);
+            } else {
+                console.error('Failed to fetch contacts:', contactsRes.status, await contactsRes.text());
             }
         } catch (err) {
             console.error('Error fetching data:', err);

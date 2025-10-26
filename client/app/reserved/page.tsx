@@ -362,7 +362,7 @@ export default function ReservedMoneyPage() {
                                 </div>
 
                                 {formData.reservationType === 'friend' && (
-                                    <div className='bg-gray-900'>
+                                    <div className=''>
                                         <Label>Select Friend</Label>
                                         <select
                                             value={formData.friendId}
@@ -370,7 +370,7 @@ export default function ReservedMoneyPage() {
                                             className="w-full p-2 border rounded-md"
                                             required
                                         >
-                                            <option value="">Choose a contact...</option>
+                                            <option className='bg-gray-900 text-white' value="">Choose a contact...</option>
                                             {contacts.map((contact) => (
                                                 <option key={contact._id} value={contact._id}>
                                                     {contact.name} ({contact.email})

@@ -108,9 +108,9 @@ export default function DashboardPage() {
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                                 <CardDescription className="text-blue-100">Total Balance</CardDescription>
-                                <Button 
-                                    size="sm" 
-                                    variant="ghost" 
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
                                     className="h-8 w-8 p-0 text-white hover:bg-blue-400"
                                     onClick={() => setBalanceVisible(!balanceVisible)}
                                 >
@@ -272,16 +272,16 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-7 gap-2">
                             {currentWeekData.map((day, index) => {
                                 const intensity = maxExpense > 0 ? (day.amount / maxExpense) : 0;
-                                const bgColor = intensity === 0 
-                                    ? 'bg-zinc-100 dark:bg-zinc-800' 
-                                    : intensity < 0.25 
-                                    ? 'bg-green-200 dark:bg-green-900'
-                                    : intensity < 0.5
-                                    ? 'bg-yellow-200 dark:bg-yellow-900'
-                                    : intensity < 0.75
-                                    ? 'bg-orange-300 dark:bg-orange-900'
-                                    : 'bg-red-400 dark:bg-red-900';
-                                
+                                const bgColor = intensity === 0
+                                    ? 'bg-zinc-100 dark:bg-zinc-800'
+                                    : intensity < 0.25
+                                        ? 'bg-green-200 dark:bg-green-900'
+                                        : intensity < 0.5
+                                            ? 'bg-yellow-200 dark:bg-yellow-900'
+                                            : intensity < 0.75
+                                                ? 'bg-orange-300 dark:bg-orange-900'
+                                                : 'bg-red-400 dark:bg-red-900';
+
                                 const date = new Date(day.date);
                                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                                 const dayNum = date.getDate();
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                                 return (
                                     <div key={index} className="flex flex-col items-center">
                                         <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">{dayName}</div>
-                                        <div 
+                                        <div
                                             className={`w-full aspect-square rounded-lg ${bgColor} flex flex-col items-center justify-center border border-zinc-300 dark:border-zinc-700 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all`}
                                             title={`${day.date}: PKR ${day.amount.toLocaleString()}`}
                                         >
@@ -342,9 +342,8 @@ export default function DashboardPage() {
                                 {recentTransactions.map((tx) => (
                                     <div key={tx._id} className="flex items-center justify-between border-b pb-4 last:border-0">
                                         <div className="flex items-center gap-3">
-                                            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                                                tx.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                                            }`}>
+                                            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${tx.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                                                }`}>
                                                 {tx.type === 'income' ? '↑' : '↓'}
                                             </div>
                                             <div>

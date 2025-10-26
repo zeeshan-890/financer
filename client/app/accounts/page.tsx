@@ -149,7 +149,7 @@ export default function AccountsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-100">Bank Accounts</h1>
+                        <h1 className="text-3xl font-bold text-white">Bank Accounts</h1>
                         <p className="text-gray-600 mt-1">Manage your payment accounts for group expenses</p>
                     </div>
                     <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto">
@@ -197,10 +197,10 @@ export default function AccountsPage() {
                                 <div className="flex items-start gap-3 mb-4">
                                     <div className="text-4xl">{getAccountTypeIcon(account.accountType)}</div>
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900">{account.accountName}</h3>
-                                        <p className="text-sm text-gray-600">{getAccountTypeLabel(account.accountType)}</p>
+                                        <h3 className="font-semibold text-gray-100">{account.accountName}</h3>
+                                        <p className="text-sm text-gray-400">{getAccountTypeLabel(account.accountType)}</p>
                                         {account.bankName && (
-                                            <p className="text-xs text-gray-500 mt-1">{account.bankName}</p>
+                                            <p className="text-xs text-gray-300 mt-1">{account.bankName}</p>
                                         )}
                                     </div>
                                 </div>

@@ -188,8 +188,8 @@ export default function ReservedMoneyPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-100">Reserved Money</h1>
-                        <p className="text-gray-600 mt-1">Track money you need to pay to others</p>
+                        <h1 className="text-3xl font-bold text-white">Reserved Money</h1>
+                        <p className="text-gray-100 mt-1">Track money you need to pay to others</p>
                     </div>
                     <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto">
                         <Plus className="w-4 h-4 mr-2" />
@@ -198,7 +198,7 @@ export default function ReservedMoneyPage() {
                 </div>
 
                 {/* Total Reserved */}
-                <Card className="p-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                <Card className="p-6 bg-gradient-to-r from-purple-700 to-pink-700 text-white">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm opacity-90">Total Reserved</p>
@@ -337,8 +337,8 @@ export default function ReservedMoneyPage() {
                                             type="button"
                                             onClick={() => setFormData({ ...formData, reservationType: 'friend', recipientName: '', recipientEmail: '', friendId: '' })}
                                             className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${formData.reservationType === 'friend'
-                                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                                : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                         >
                                             <User className="w-5 h-5" />
@@ -348,8 +348,8 @@ export default function ReservedMoneyPage() {
                                             type="button"
                                             onClick={() => setFormData({ ...formData, reservationType: 'custom', recipientName: '', recipientEmail: '', friendId: '' })}
                                             className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${formData.reservationType === 'custom'
-                                                    ? 'border-purple-500 bg-purple-50 text-purple-700'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                                : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                         >
                                             <Package className="w-5 h-5" />

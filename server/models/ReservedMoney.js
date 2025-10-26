@@ -14,7 +14,7 @@ const reservedMoneySchema = new mongoose.Schema({
     },
     friendId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'Contact'
     },
     amount: {
         type: Number,

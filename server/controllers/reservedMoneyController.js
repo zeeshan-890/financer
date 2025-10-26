@@ -1,5 +1,5 @@
 const ReservedMoney = require('../models/ReservedMoney');
-const User = require('../models/User');
+const Contact = require('../models/Contact');
 
 // Get all reserved money entries
 exports.getAllReserved = async (req, res) => {
@@ -52,17 +52,17 @@ exports.createReserved = async (req, res) => {
         // If it's a friend reservation, validate and add friend info
         if (reservationType === 'friend') {
             if (!friendId) {
-                return res.status(400).json({ message: 'Friend ID is required for friend reservations' });
+                return res.status(400).json({ message: 'Contact ID is required for friend reservations' });
             }
 
-            const friend = await User.findById(friendId);
-            if (!friend) {
-                return res.status(404).json({ message: 'Friend not found' });
+            const contact = await Contact.findById(friendId);
+            if (!contact) {
+                return res.status(404).json({ message: 'Contact not found' });
             }
 
             reservedData.friendId = friendId;
-            reservedData.recipientName = friend.name;
-            reservedData.recipientEmail = friend.email;
+            reservedData.recipientName = contact.name;
+            reservedData.recipientEmail = contact.email;
         } else {
             // For custom reservations, recipient name is required
             if (!recipientName) {

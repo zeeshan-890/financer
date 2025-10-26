@@ -59,22 +59,48 @@ export const authApi = {
 // User API
 export const userApi = {
     getUser: (id: string) => api.get(`/users/${id}`),
-    updateProfile: (data: { name?: string; currency?: string; monthlyBudget?: number; income?: number }) =>
+    updateProfile: (data: { name?: string; currency?: string; monthlyBudget?: number; income?: number; hideBalanceByDefault?: boolean }) =>
         api.put('/users/profile', data),
-    getFriends: () => api.get('/users/friends'),
-    addFriend: (data: {
-        email: string;
-        name: string;
-        phone?: string;
-        university?: string;
-        batch?: string;
-        hostel?: string;
-        address?: string;
-        notes?: string;
-        userId?: string;
-    }) => api.post('/users/friends', data),
-    removeFriend: (friendId: string) => api.delete(`/users/friends/${friendId}`),
     searchUsers: (query: string) => api.get(`/users/search?query=${query}`),
+    // Balance PIN
+    setBalancePin: (data: { pin: string; currentPin?: string }) =>
+        api.post('/users/balance-pin', data),
+    verifyBalancePin: (data: { pin: string }) =>
+        api.post('/users/balance-pin/verify', data),
+    removeBalancePin: (data: { currentPin: string }) =>
+        api.delete('/users/balance-pin', { data }),
+};
+
+// Friend API
+export const friendApi = {
+    getAll: () => api.get('/friends'),
+    sendRequest: (data: { email: string }) => api.post('/friends', data),
+    acceptRequest: (id: string) => api.put(`/friends/${id}/accept`),
+    remove: (id: string) => api.delete(`/friends/${id}`),
+    searchUsers: (email: string) => api.get(`/friends/search?email=${email}`),
+};
+
+// Bank Account API
+export const bankAccountApi = {
+    getAll: () => api.get('/bank-accounts'),
+    create: (data: { accountType: string; accountName: string; accountNumber: string; bankName?: string; isDefault?: boolean }) =>
+        api.post('/bank-accounts', data),
+    update: (id: string, data: { accountType?: string; accountName?: string; accountNumber?: string; bankName?: string; isDefault?: boolean }) =>
+        api.put(`/bank-accounts/${id}`, data),
+    delete: (id: string) => api.delete(`/bank-accounts/${id}`),
+    setDefault: (id: string) => api.put(`/bank-accounts/${id}/default`),
+};
+
+// Reserved Money API
+export const reservedMoneyApi = {
+    getAll: () => api.get('/reserved-money'),
+    create: (data: { amount: number; reason: string; recipientName: string; dueDate?: Date; notes?: string }) =>
+        api.post('/reserved-money', data),
+    update: (id: string, data: { amount?: number; reason?: string; recipientName?: string; dueDate?: Date; notes?: string; status?: string }) =>
+        api.put(`/reserved-money/${id}`, data),
+    markAsPaid: (id: string) => api.put(`/reserved-money/${id}/paid`),
+    delete: (id: string) => api.delete(`/reserved-money/${id}`),
+    getTotal: () => api.get('/reserved-money/total'),
 };
 
 // Group API

@@ -8,22 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { userApi } from '@/lib/api';
-import { Trash2, UserPlus } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-interface Friend {
-    _id: string;
-    userId?: string;
-    name: string;
-    email: string;
-    phone?: string;
-    university?: string;
-    batch?: string;
-    hostel?: string;
-    address?: string;
-    notes?: string;
-    addedAt?: string;
-}
 
 export default function SettingsPage() {
     const { isAuthenticated, isHydrated, user } = useAuthStore();
@@ -31,41 +17,32 @@ export default function SettingsPage() {
 
     // Profile
     const [name, setName] = useState('');
-    const [currency, setCurrency] = useState('INR');
+    const [currency, setCurrency] = useState('PKR');
     const [monthlyBudget, setMonthlyBudget] = useState('');
     const [income, setIncome] = useState('');
+    const [hideBalanceByDefault, setHideBalanceByDefault] = useState(false);
+    const [hasBalancePin, setHasBalancePin] = useState(false);
 
-    // Friends
-    const [friends, setFriends] = useState<Friend[]>([]);
-    const [showAddFriend, setShowAddFriend] = useState(false);
-
-    // Add friend form
-    const [friendName, setFriendName] = useState('');
-    const [friendEmail, setFriendEmail] = useState('');
-    const [friendPhone, setFriendPhone] = useState('');
-    const [friendUniversity, setFriendUniversity] = useState('');
-    const [friendBatch, setFriendBatch] = useState('');
-    const [friendHostel, setFriendHostel] = useState('');
-    const [friendAddress, setFriendAddress] = useState('');
-    const [friendNotes, setFriendNotes] = useState('');
+    // PIN Management
+    const [showPinSection, setShowPinSection] = useState(false);
+    const [currentPin, setCurrentPin] = useState('');
+    const [newPin, setNewPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [showCurrentPin, setShowCurrentPin] = useState(false);
+    const [showNewPin, setShowNewPin] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (!isHydrated) return; // Wait for store to hydrate
+        if (!isHydrated) return;
 
         if (!isAuthenticated) {
             router.push('/login');
             return;
         }
 
-        // Fetch profile and friends
-        const loadData = async () => {
-            await fetchProfile();
-            await fetchFriends();
-        };
-        loadData();
+        fetchProfile();
     }, [isAuthenticated, isHydrated, router]);
 
     const fetchProfile = async () => {

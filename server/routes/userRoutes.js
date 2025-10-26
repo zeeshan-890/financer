@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const auth = require('../middlewares/authMiddleware');
+const { protect } = require('../middlewares/authMiddleware');
 
-router.get('/search', auth, userController.searchUsers);
-router.get('/friends', auth, userController.getFriends);
-router.get('/:id', auth, userController.getUser);
-router.put('/profile', auth, userController.updateUser);
-router.post('/friends', auth, userController.addFriend);
-router.delete('/friends/:friendId', auth, userController.removeFriend);
+router.get('/search', protect, userController.searchUsers);
+router.get('/:id', protect, userController.getUser);
+router.put('/profile', protect, userController.updateUser);
+
+// Balance PIN routes
+router.post('/balance-pin', protect, userController.setBalancePin);
+router.post('/balance-pin/verify', protect, userController.verifyBalancePin);
+router.delete('/balance-pin', protect, userController.removeBalancePin);
 
 module.exports = router;

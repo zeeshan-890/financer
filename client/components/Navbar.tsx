@@ -29,14 +29,23 @@ export default function Navbar() {
                         <NavLink href="/dashboard" active={pathname === '/dashboard'}>
                             Dashboard
                         </NavLink>
-                        <NavLink href="/groups" active={pathname === '/groups'}>
-                            Groups
-                        </NavLink>
                         <NavLink href="/transactions" active={pathname === '/transactions'}>
                             Transactions
                         </NavLink>
+                        <NavLink href="/groups" active={pathname === '/groups'}>
+                            Groups
+                        </NavLink>
                         <NavLink href="/goals" active={pathname === '/goals'}>
                             Goals
+                        </NavLink>
+                        <NavLink href="/friends" active={pathname === '/friends'}>
+                            Friends
+                        </NavLink>
+                        <NavLink href="/accounts" active={pathname === '/accounts'}>
+                            Accounts
+                        </NavLink>
+                        <NavLink href="/reserved" active={pathname === '/reserved'}>
+                            Reserved
                         </NavLink>
                         <NavLink href="/settings" active={pathname === '/settings'}>
                             Settings
@@ -77,13 +86,6 @@ export default function Navbar() {
                             Dashboard
                         </MobileNavLink>
                         <MobileNavLink
-                            href="/groups"
-                            active={pathname === '/groups'}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            Groups
-                        </MobileNavLink>
-                        <MobileNavLink
                             href="/transactions"
                             active={pathname === '/transactions'}
                             onClick={() => setMobileMenuOpen(false)}
@@ -91,11 +93,39 @@ export default function Navbar() {
                             Transactions
                         </MobileNavLink>
                         <MobileNavLink
+                            href="/groups"
+                            active={pathname === '/groups'}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Groups
+                        </MobileNavLink>
+                        <MobileNavLink
                             href="/goals"
                             active={pathname === '/goals'}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Goals
+                        </MobileNavLink>
+                        <MobileNavLink
+                            href="/friends"
+                            active={pathname === '/friends'}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Friends
+                        </MobileNavLink>
+                        <MobileNavLink
+                            href="/accounts"
+                            active={pathname === '/accounts'}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Accounts
+                        </MobileNavLink>
+                        <MobileNavLink
+                            href="/reserved"
+                            active={pathname === '/reserved'}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Reserved
                         </MobileNavLink>
                         <MobileNavLink
                             href="/settings"

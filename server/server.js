@@ -31,6 +31,9 @@ app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/goals', require('./routes/goalRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
+app.use('/api/friends', require('./routes/friendRoutes'));
+app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 
 // Serve static files from Next.js build
 app.use(express.static(path.join(__dirname, 'public')));

@@ -59,19 +59,19 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                 console.error('No token found');
                 return;
             }
-            
+
             const [groupsRes, contactsRes] = await Promise.all([
                 groupApi.getAllGroups(),
                 fetch('/api/contacts', {
-                    headers: { 
+                    headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 })
             ]);
-            
+
             setGroups(groupsRes.data);
-            
+
             if (contactsRes.ok) {
                 const contactsData = await contactsRes.json();
                 console.log('Contacts fetched:', contactsData);

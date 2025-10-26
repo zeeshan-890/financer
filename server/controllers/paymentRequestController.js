@@ -150,7 +150,7 @@ exports.updateRequest = async (req, res) => {
         if (status) {
             const previousStatus = request.status;
             request.status = status;
-            
+
             // If changing from pending to paid, create an INCOME transaction
             if (status === 'paid' && previousStatus === 'pending' && !request.paidAt) {
                 await Transaction.create({

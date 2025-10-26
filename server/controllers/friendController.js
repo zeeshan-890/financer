@@ -196,31 +196,63 @@ exports.addFriendManually = async (req, res) => {
             return res.status(400).json({ message: 'Name and email are required' });
         }
 
-        // Check if friendship already exists with this email
+        // Check if user with this email exists
+        let friendUser = await User.findOne({ email: email.toLowerCase() });
+
+        // If user doesn't exist, create a basic user account
+        if (!friendUser) {
+            friendUser = new User({
+                name,
+                email: email.toLowerCase(),
+                password: 'manual-friend-no-password', // Placeholder, they can't login without verification
+                isEmailVerified: false,
+                currency: 'PKR'
+            });
+            await friendUser.save();
+        }
+
+        // Check if friendship already exists
         const existingFriend = await Friend.findOne({
             userId: req.user.id,
-            'friendId.email': email
+            friendId: friendUser._id
         });
 
         if (existingFriend) {
-            return res.status(400).json({ message: 'Friend with this email already exists' });
+            return res.status(400).json({ message: 'Friend already exists' });
         }
 
+        // Also check reverse friendship
+        const reverseFriend = await Friend.findOne({
+            userId: friendUser._id,
+            friendId: req.user.id
+        });
+
+        // Create friendship
         const friend = new Friend({
             userId: req.user.id,
-            friendId: { name, email }, // Store as embedded document
+            friendId: friendUser._id,
             status: 'accepted', // Auto-accept for manual adds
             acceptedAt: new Date()
         });
 
         await friend.save();
 
+        // If there's a reverse friendship that was pending, accept it too
+        if (reverseFriend && reverseFriend.status === 'pending') {
+            reverseFriend.status = 'accepted';
+            reverseFriend.acceptedAt = new Date();
+            await reverseFriend.save();
+        }
+
+        // Populate friend details
+        await friend.populate('friendId', 'name email');
+
         res.status(201).json({
             _id: friend._id,
             friend: {
-                _id: friend.friendId._id || friend._id,
-                name: friend.friendId.name || name,
-                email: friend.friendId.email || email
+                _id: friend.friendId._id,
+                name: friend.friendId.name,
+                email: friend.friendId.email
             },
             status: friend.status,
             isSentByMe: true,

@@ -171,3 +171,24 @@ export const goalApi = {
 export const reminderApi = {
     send: (data?: { reminderId?: string }) => api.post('/reminders/send', data),
 };
+
+// Payment Request API
+export const paymentRequestApi = {
+    getAll: () => api.get('/payment-requests'),
+    create: (data: {
+        friendId: string;
+        friendName: string;
+        friendEmail: string;
+        amount: number;
+        reason: string;
+        dueDate?: string;
+        bankAccountId?: string;
+        reminderTiming: 'immediate' | 'day_before' | 'day_of' | 'manual';
+        message: string;
+    }) => api.post('/payment-requests', data),
+    update: (id: string, data: { status?: string; paidAt?: Date }) =>
+        api.put(`/payment-requests/${id}`, data),
+    markAsPaid: (id: string) => api.put(`/payment-requests/${id}/paid`),
+    sendReminder: (id: string) => api.post(`/payment-requests/${id}/remind`),
+    delete: (id: string) => api.delete(`/payment-requests/${id}`),
+};

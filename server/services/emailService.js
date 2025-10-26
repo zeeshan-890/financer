@@ -227,3 +227,126 @@ exports.sendExpenseNotification = async (friendEmail, friendName, paidByName, ex
         throw error;
     }
 };
+
+exports.sendPaymentRequestEmail = async ({ toEmail, toName, fromName, amount, reason, message, dueDate, bankAccount }) => {
+    console.log('=== SENDING PAYMENT REQUEST ===');
+    console.log('To:', toEmail);
+    console.log('From:', fromName);
+    console.log('Amount:', amount);
+    console.log('Reason:', reason);
+
+    const subject = `💰 Payment Request: ₹${amount.toLocaleString()} - ${reason}`;
+
+    const dueDateText = dueDate
+        ? `<div style="margin-top: 15px;">
+            <p style="color: #6B7280; font-size: 14px; margin: 0 0 5px 0;">Due Date</p>
+            <p style="color: #DC2626; font-size: 16px; font-weight: 600; margin: 0;">${new Date(dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>`
+        : '';
+
+    const bankAccountText = bankAccount
+        ? `<!-- Bank Account Details -->
+        <div style="background: #DBEAFE; border: 2px solid #3B82F6; border-radius: 12px; padding: 25px; margin: 30px 0;">
+            <p style="color: #1E40AF; font-size: 16px; font-weight: bold; margin: 0 0 15px 0;">💳 Payment Details</p>
+            <div style="space-y: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <p style="color: #1E3A8A; font-size: 13px; margin: 0 0 3px 0;">Account Name</p>
+                    <p style="color: #111827; font-size: 15px; font-weight: 600; margin: 0;">${bankAccount.name}</p>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <p style="color: #1E3A8A; font-size: 13px; margin: 0 0 3px 0;">Account Number</p>
+                    <p style="color: #111827; font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 2px;">${bankAccount.number}</p>
+                </div>
+                ${bankAccount.bank ? `
+                <div style="margin-bottom: 10px;">
+                    <p style="color: #1E3A8A; font-size: 13px; margin: 0 0 3px 0;">Bank Name</p>
+                    <p style="color: #111827; font-size: 15px; font-weight: 600; margin: 0;">${bankAccount.bank}</p>
+                </div>
+                ` : ''}
+                <div style="margin-bottom: 10px;">
+                    <p style="color: #1E3A8A; font-size: 13px; margin: 0 0 3px 0;">Account Type</p>
+                    <p style="color: #111827; font-size: 15px; font-weight: 600; margin: 0; text-transform: capitalize;">${bankAccount.type}</p>
+                </div>
+            </div>
+        </div>`
+        : '';
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 30px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🧾 Payment Request</h1>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 30px;">
+                <p style="font-size: 16px; color: #374151; margin: 0 0 20px 0;">Hi <strong>${toName}</strong>,</p>
+                
+                <p style="font-size: 16px; color: #374151; margin: 0 0 30px 0;">
+                    <strong>${fromName}</strong> has sent you a payment request.
+                </p>
+
+                <!-- Payment Request Card -->
+                <div style="background: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 25px; margin: 20px 0;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <p style="color: #065F46; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Amount Requested</p>
+                        <p style="color: #10B981; font-size: 36px; font-weight: bold; margin: 0;">₹${amount.toLocaleString()}</p>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #86EFAC;">
+                        <p style="color: #065F46; font-size: 14px; margin: 0 0 5px 0;">Reason</p>
+                        <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0;">${reason}</p>
+                    </div>
+
+                    ${dueDateText}
+                </div>
+
+                ${bankAccountText}
+
+                <!-- Custom Message -->
+                ${message ? `
+                <div style="background: #F9FAFB; border-left: 4px solid #6B7280; padding: 15px; border-radius: 8px; margin: 30px 0;">
+                    <p style="color: #374151; font-size: 14px; margin: 0; white-space: pre-wrap;">${message}</p>
+                </div>
+                ` : ''}
+
+                <!-- Call to Action -->
+                <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; border-radius: 8px; margin: 30px 0;">
+                    <p style="color: #92400E; font-size: 14px; margin: 0; font-weight: 500;">
+                        ⚠️ Please make the payment at your earliest convenience.
+                    </p>
+                </div>
+
+                <p style="font-size: 14px; color: #6B7280; margin: 30px 0 0 0;">
+                    Once you've paid, please inform ${fromName} so they can mark it as complete.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #F9FAFB; padding: 20px; text-align: center; border-top: 1px solid #E5E7EB;">
+                <p style="color: #6B7280; font-size: 12px; margin: 0;">
+                    This is an automated payment request from Financer
+                </p>
+                <p style="color: #9CA3AF; font-size: 11px; margin: 10px 0 0 0;">
+                    © 2025 Financer. All rights reserved.
+                </p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const info = await transporter.sendMail({
+            from: `Financer <${process.env.SMTP_USER}>`,
+            to: toEmail,
+            subject,
+            html
+        });
+        console.log(`✅ Payment request sent successfully to ${toEmail}`);
+        console.log('Message ID:', info.messageId);
+        return info;
+    } catch (error) {
+        console.error(`❌ Failed to send payment request to ${toEmail}:`, error.message);
+        console.error('Full error:', error);
+        throw error;
+    }
+};

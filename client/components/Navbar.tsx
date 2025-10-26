@@ -35,6 +35,9 @@ export default function Navbar() {
                         <NavLink href="/groups" active={pathname === '/groups'}>
                             Groups
                         </NavLink>
+                        <NavLink href="/payment-requests" active={pathname === '/payment-requests'}>
+                            Requests
+                        </NavLink>
                         <NavLink href="/goals" active={pathname === '/goals'}>
                             Goals
                         </NavLink>
@@ -98,6 +101,13 @@ export default function Navbar() {
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             Groups
+                        </MobileNavLink>
+                        <MobileNavLink
+                            href="/payment-requests"
+                            active={pathname === '/payment-requests'}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Payment Requests
                         </MobileNavLink>
                         <MobileNavLink
                             href="/goals"

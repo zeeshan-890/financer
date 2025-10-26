@@ -486,12 +486,12 @@ export default function GroupExpensesPage() {
                                             <option value="">Select account (optional)</option>
                                             {bankAccounts.map((account) => (
                                                 <option key={account._id} value={account._id}>
-                                                    {account.accountName} - {account.bankName} (Balance: PKR {account.balance.toLocaleString()})
+                                                    {account.accountName} - {account.bankName} (Balance: PKR {(account.balance || 0).toLocaleString()})
                                                 </option>
                                             ))}
                                         </select>
                                         <p className="text-xs text-zinc-500 mt-1">
-                                            Amount will be deducted from selected account and returned when friends pay
+                                            Bank account reference for invoice display only
                                         </p>
                                     </div>
 

@@ -362,7 +362,7 @@ export default function ReservedMoneyPage() {
                                 </div>
 
                                 {formData.reservationType === 'friend' && (
-                                    <div>
+                                    <div className='bg-gray-900'>
                                         <Label>Select Friend</Label>
                                         <select
                                             value={formData.friendId}

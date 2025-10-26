@@ -73,12 +73,9 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
 
     const handleGroupChange = (groupId: string) => {
         setSelectedGroup(groupId);
-        const group = groups.find((g) => g._id === groupId);
-        if (group) {
-            // Auto-select all group members
-            setSelectedFriends(group.members.map((m) => m.userId));
-            setCustomAmounts({});
-        }
+        // Just clear selection when group changes - user will select contacts manually
+        setSelectedFriends([]);
+        setCustomAmounts({});
     };
 
     const toggleFriend = (friendId: string) => {
@@ -101,28 +98,24 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
             return;
         }
 
-        // Validate custom amounts
+                        // Validate custom amounts
         if (splitMode === 'custom') {
             const total = selectedFriends.reduce((sum, id) => sum + parseFloat(customAmounts[id] || '0'), 0);
             if (Math.abs(total - parseFloat(totalAmount)) > 0.01) {
-                setError(`Custom amounts (₹${total.toFixed(2)}) must equal total amount (₹${totalAmount})`);
+                setError(`Custom amounts (PKR ${total.toFixed(2)}) must equal total amount (PKR ${totalAmount})`);
                 return;
             }
-        }
-
-        setLoading(true);
+        }        setLoading(true);
 
         try {
-            // Prepare split data
+            // Prepare split data from contacts only
             const splitBetween = selectedFriends.map((friendId) => {
                 const contact = contacts.find((c) => c._id === friendId);
-                const group = groups.find((g) => g._id === selectedGroup);
-                const member = group?.members.find((m) => m.userId === friendId);
-
+                
                 return {
                     userId: friendId,
-                    name: contact?.name || member?.name || 'Unknown',
-                    email: contact?.email || member?.email || '',
+                    name: contact?.name || 'Unknown',
+                    email: contact?.email || '',
                     amount: splitMode === 'equal' ? parseFloat(calculateEqualSplit()) : parseFloat(customAmounts[friendId] ?? '0'),
                 };
             });
@@ -181,7 +174,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="amount">Total Amount (₹) *</Label>
+                                <Label htmlFor="amount">Total Amount (PKR) *</Label>
                                 <Input
                                     id="amount"
                                     type="number"
@@ -237,7 +230,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
 
                         {/* Contact Selection */}
                         <div>
-                            <Label>Split With *</Label>
+                            <Label>Split With (Select from Contacts) *</Label>
                             <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
                                 {contacts.length === 0 ? (
                                     <p className="text-sm text-zinc-500">No contacts added yet. Add contacts in Friends page.</p>
@@ -279,7 +272,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                                 : 'border-zinc-200 text-zinc-600'
                                                 }`}
                                         >
-                                            Equal Split (₹{calculateEqualSplit()} each)
+                                            Equal Split (PKR {calculateEqualSplit()} each)
                                         </button>
                                         <button
                                             type="button"
@@ -301,9 +294,10 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                         <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                                             {selectedFriends.map((friendId) => {
                                                 const contact = contacts.find((c) => c._id === friendId);
+                                                
                                                 return (
                                                     <div key={friendId} className="flex items-center gap-2">
-                                                        <span className="flex-1 text-sm">{contact?.name}</span>
+                                                        <span className="flex-1 text-sm">{contact?.name || 'Unknown'}</span>
                                                         <Input
                                                             type="number"
                                                             step="0.01"

@@ -64,10 +64,18 @@ exports.createRequest = async (req, res) => {
             status: 'pending'
         };
 
-        // If bank account is specified, add it
+        // If bank account is specified, add it and deduct amount
         if (bankAccountId) {
             const bankAccount = await BankAccount.findById(bankAccountId);
             if (bankAccount && bankAccount.userId.toString() === req.user.id) {
+                // Deduct amount from bank account
+                if (bankAccount.balance < amount) {
+                    return res.status(400).json({ message: 'Insufficient balance in bank account' });
+                }
+                
+                bankAccount.balance -= amount;
+                await bankAccount.save();
+                
                 requestData.bankAccountId = bankAccountId;
                 requestData.bankAccountName = bankAccount.accountName;
                 requestData.bankAccountNumber = bankAccount.accountNumber;
@@ -135,6 +143,14 @@ exports.updateRequest = async (req, res) => {
         if (status) {
             request.status = status;
             if (status === 'paid' && !request.paidAt) {
+                // Add amount back to bank account if one was used
+                if (request.bankAccountId) {
+                    const bankAccount = await BankAccount.findById(request.bankAccountId);
+                    if (bankAccount && bankAccount.userId.toString() === req.user.id) {
+                        bankAccount.balance += request.amount;
+                        await bankAccount.save();
+                    }
+                }
                 request.paidAt = paidAt || new Date();
             }
         }
@@ -159,6 +175,15 @@ exports.markAsPaid = async (req, res) => {
 
         if (!request) {
             return res.status(404).json({ message: 'Payment request not found' });
+        }
+
+        // Add amount back to bank account if one was used
+        if (request.bankAccountId) {
+            const bankAccount = await BankAccount.findById(request.bankAccountId);
+            if (bankAccount && bankAccount.userId.toString() === req.user.id) {
+                bankAccount.balance += request.amount;
+                await bankAccount.save();
+            }
         }
 
         request.status = 'paid';

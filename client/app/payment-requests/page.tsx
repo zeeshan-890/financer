@@ -139,7 +139,7 @@ Hi ${contact.name},
 I hope this message finds you well. This is a friendly reminder about the payment due for:
 
 📌 Reason: ${formData.reason}
-💰 Amount: ₹${amount.toLocaleString()}${dueText}${bankText}${customText}
+💰 Amount: PKR ${amount.toLocaleString()}${dueText}${bankText}${customText}
 
 Please make the payment at your earliest convenience. Once done, I'll mark it as paid in my records.
 
@@ -296,7 +296,7 @@ ${new Date().toLocaleDateString('en-IN')}`;
                                         </div>
                                         <div className="text-right">
                                             <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                                                ₹{request.amount.toLocaleString()}
+                                                PKR {request.amount.toLocaleString()}
                                             </p>
                                             <span className={`inline-block px-2 py-1 mt-2 text-xs font-medium rounded-full ${request.status === 'paid'
                                                 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
@@ -410,7 +410,7 @@ ${new Date().toLocaleDateString('en-IN')}`;
 
                                     {/* Amount */}
                                     <div>
-                                        <Label htmlFor="amount">Amount (₹) *</Label>
+                                        <Label htmlFor="amount">Amount (PKR) *</Label>
                                         <div className="relative mt-1">
                                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                                             <Input

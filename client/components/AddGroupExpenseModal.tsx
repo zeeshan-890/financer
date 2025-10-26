@@ -63,21 +63,21 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                 setFetchingContacts(false);
                 return;
             }
-            
+
             console.log('Fetching contacts with token:', token.substring(0, 20) + '...');
-            
+
             const [groupsRes, contactsRes] = await Promise.all([
                 groupApi.getAllGroups(),
                 fetch('/api/contacts', {
-                    headers: { 
+                    headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 })
             ]);
-            
+
             setGroups(groupsRes.data);
-            
+
             if (contactsRes.ok) {
                 const contactsData = await contactsRes.json();
                 console.log('Contacts fetched successfully:', contactsData.length, 'contacts');
@@ -94,7 +94,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
         } finally {
             setFetchingContacts(false);
         }
-    };    const handleGroupChange = (groupId: string) => {
+    }; const handleGroupChange = (groupId: string) => {
         setSelectedGroup(groupId);
         // Just clear selection when group changes - user will select contacts manually
         setSelectedFriends([]);

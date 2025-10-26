@@ -46,6 +46,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
     const [reminderInterval, setReminderInterval] = useState(24); // default 24 hours
 
     const [loading, setLoading] = useState(false);
+    const [fetchingContacts, setFetchingContacts] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -53,38 +54,47 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
     }, []);
 
     const fetchData = async () => {
+        setFetchingContacts(true);
         try {
             const token = localStorage.getItem('token');
             if (!token) {
                 console.error('No token found');
+                setError('Authentication required. Please log in again.');
+                setFetchingContacts(false);
                 return;
             }
-
+            
+            console.log('Fetching contacts with token:', token.substring(0, 20) + '...');
+            
             const [groupsRes, contactsRes] = await Promise.all([
                 groupApi.getAllGroups(),
                 fetch('/api/contacts', {
-                    headers: {
+                    headers: { 
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 })
             ]);
-
+            
             setGroups(groupsRes.data);
-
+            
             if (contactsRes.ok) {
                 const contactsData = await contactsRes.json();
-                console.log('Contacts fetched:', contactsData);
+                console.log('Contacts fetched successfully:', contactsData.length, 'contacts');
+                console.log('Contacts:', contactsData);
                 setContacts(contactsData);
             } else {
-                console.error('Failed to fetch contacts:', contactsRes.status, await contactsRes.text());
+                const errorText = await contactsRes.text();
+                console.error('Failed to fetch contacts:', contactsRes.status, errorText);
+                setError(`Failed to load contacts: ${contactsRes.status} - ${errorText}`);
             }
         } catch (err) {
             console.error('Error fetching data:', err);
+            setError('Failed to load data. Please try again.');
+        } finally {
+            setFetchingContacts(false);
         }
-    };
-
-    const handleGroupChange = (groupId: string) => {
+    };    const handleGroupChange = (groupId: string) => {
         setSelectedGroup(groupId);
         // Just clear selection when group changes - user will select contacts manually
         setSelectedFriends([]);
@@ -245,8 +255,13 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                         <div>
                             <Label>Split With (Select from Contacts) *</Label>
                             <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-                                {contacts.length === 0 ? (
-                                    <p className="text-sm text-zinc-500">No contacts added yet. Add contacts in Friends page.</p>
+                                {fetchingContacts ? (
+                                    <p className="text-sm text-zinc-500">Loading contacts...</p>
+                                ) : contacts.length === 0 ? (
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-zinc-500">No contacts added yet.</p>
+                                        <p className="text-xs text-zinc-400">Add contacts in the Friends page first, then they will appear here.</p>
+                                    </div>
                                 ) : (
                                     <div className="space-y-2">
                                         {contacts.map((contact) => (

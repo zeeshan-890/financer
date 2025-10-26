@@ -42,6 +42,8 @@ interface TransactionData {
     isGroupExpense?: boolean;
     groupId?: string;
     splitBetween?: SplitBetween[];
+    reminderEnabled?: boolean;
+    reminderInterval?: number;
 }
 
 // Auth API
@@ -183,7 +185,8 @@ export const paymentRequestApi = {
         reason: string;
         dueDate?: string;
         bankAccountId?: string;
-        reminderTiming: 'immediate' | 'day_before' | 'day_of' | 'manual';
+        reminderTiming: 'immediate' | 'custom' | 'manual';
+        reminderInterval?: number;
         message: string;
     }) => api.post('/payment-requests', data),
     update: (id: string, data: { status?: string; paidAt?: Date }) =>

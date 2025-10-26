@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { reservedMoneyApi, friendApi } from '@/lib/api';
+import { reservedMoneyApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -22,19 +22,16 @@ interface ReservedMoney {
     paidAt?: string;
 }
 
-interface Friend {
+interface Contact {
     _id: string;
-    friend: {
-        _id: string;
-        name: string;
-        email: string;
-    };
-    status: string;
+    name: string;
+    email: string;
+    type: string;
 }
 
 export default function ReservedMoneyPage() {
     const [reservedItems, setReservedItems] = useState<ReservedMoney[]>([]);
-    const [friends, setFriends] = useState<Friend[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>([]);
     const [totalReserved, setTotalReserved] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -54,15 +51,21 @@ export default function ReservedMoneyPage() {
 
     useEffect(() => {
         fetchReservedMoney();
-        fetchFriends();
+        fetchContacts();
     }, []);
 
-    const fetchFriends = async () => {
+    const fetchContacts = async () => {
         try {
-            const response = await friendApi.getAll();
-            setFriends(response.data.filter((f: Friend) => f.status === 'accepted'));
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/contacts', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setContacts(data);
+            }
         } catch (err) {
-            console.error('Error fetching friends:', err);
+            console.error('Error fetching contacts:', err);
         }
     };
 
@@ -167,14 +170,14 @@ export default function ReservedMoneyPage() {
         });
     };
 
-    const handleFriendSelect = (friendId: string) => {
-        const selectedFriend = friends.find(f => f._id === friendId);
-        if (selectedFriend) {
+    const handleFriendSelect = (contactId: string) => {
+        const selectedContact = contacts.find(c => c._id === contactId);
+        if (selectedContact) {
             setFormData({
                 ...formData,
-                friendId: friendId,
-                recipientName: selectedFriend.friend.name,
-                recipientEmail: selectedFriend.friend.email
+                friendId: contactId,
+                recipientName: selectedContact.name,
+                recipientEmail: selectedContact.email
             });
         }
     };
@@ -367,10 +370,10 @@ export default function ReservedMoneyPage() {
                                             className="w-full p-2 border rounded-md"
                                             required
                                         >
-                                            <option value="">Choose a friend...</option>
-                                            {friends.map((friend) => (
-                                                <option key={friend._id} value={friend._id}>
-                                                    {friend.friend.name} ({friend.friend.email})
+                                            <option value="">Choose a contact...</option>
+                                            {contacts.map((contact) => (
+                                                <option key={contact._id} value={contact._id}>
+                                                    {contact.name} ({contact.email})
                                                 </option>
                                             ))}
                                         </select>

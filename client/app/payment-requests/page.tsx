@@ -8,17 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Receipt, Plus, Clock, DollarSign, User, Calendar, Mail, CreditCard, FileText, Send, X, Check } from 'lucide-react';
-import { friendApi, bankAccountApi, paymentRequestApi } from '@/lib/api';
+import { bankAccountApi, paymentRequestApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-interface Friend {
+interface Contact {
     _id: string;
-    friend: {
-        _id: string;
-        name: string;
-        email: string;
-    };
-    status: string;
+    name: string;
+    email: string;
+    phone?: string;
+    type: string;
 }
 
 interface BankAccount {
@@ -41,7 +39,8 @@ interface PaymentRequest {
     bankAccountId?: string;
     bankAccountName?: string;
     bankAccountNumber?: string;
-    reminderTiming: 'immediate' | 'day_before' | 'day_of' | 'manual';
+    reminderTiming: 'immediate' | 'custom' | 'manual';
+    reminderInterval?: number; // in hours
     message: string;
     status: 'pending' | 'paid' | 'cancelled';
     createdAt: string;
@@ -52,7 +51,7 @@ export default function PaymentRequestsPage() {
     const { isAuthenticated, isHydrated, user } = useAuthStore();
     const router = useRouter();
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
-    const [friends, setFriends] = useState<Friend[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>([]);
     const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -64,7 +63,8 @@ export default function PaymentRequestsPage() {
         reason: '',
         dueDate: '',
         bankAccountId: '',
-        reminderTiming: 'immediate' as 'immediate' | 'day_before' | 'day_of' | 'manual',
+        reminderTiming: 'immediate' as 'immediate' | 'custom' | 'manual',
+        reminderInterval: 24, // default 24 hours (1 day)
         customMessage: '',
     });
     const [saving, setSaving] = useState(false);
@@ -82,15 +82,19 @@ export default function PaymentRequestsPage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [friendsRes, bankAccountsRes, requestsRes] = await Promise.all([
-                friendApi.getAll(),
+            const token = localStorage.getItem('token');
+            const [contactsRes, bankAccountsRes, requestsRes] = await Promise.all([
+                fetch('/api/contacts', {
+                    headers: { Authorization: `Bearer ${token}` }
+                }),
                 bankAccountApi.getAll(),
                 paymentRequestApi.getAll(),
             ]);
 
-            // Filter accepted friends
-            const acceptedFriends = friendsRes.data.filter((f: Friend) => f.status === 'accepted');
-            setFriends(acceptedFriends);
+            if (contactsRes.ok) {
+                const contactsData = await contactsRes.json();
+                setContacts(contactsData);
+            }
             setBankAccounts(bankAccountsRes.data);
             setRequests(requestsRes.data);
         } catch (error) {
@@ -101,9 +105,8 @@ export default function PaymentRequestsPage() {
         }
     };
 
-    const getSelectedFriend = () => {
-        const friend = friends.find(f => f.friend._id === formData.friendId);
-        return friend?.friend || null;
+    const getSelectedContact = () => {
+        return contacts.find(c => c._id === formData.friendId) || null;
     };
 
     const getSelectedBankAccount = () => {
@@ -111,10 +114,10 @@ export default function PaymentRequestsPage() {
     };
 
     const generateInvoiceMessage = () => {
-        const friend = getSelectedFriend();
+        const contact = getSelectedContact();
         const bankAccount = getSelectedBankAccount();
 
-        if (!friend || !formData.amount || !formData.reason) {
+        if (!contact || !formData.amount || !formData.reason) {
             return '';
         }
 
@@ -131,7 +134,7 @@ export default function PaymentRequestsPage() {
 
         return `🧾 PAYMENT REQUEST INVOICE
 
-Hi ${friend.name},
+Hi ${contact.name},
 
 I hope this message finds you well. This is a friendly reminder about the payment due for:
 
@@ -160,9 +163,9 @@ ${new Date().toLocaleDateString('en-IN')}`;
             return;
         }
 
-        const friend = getSelectedFriend();
-        if (!friend) {
-            toast.error('Please select a friend');
+        const contact = getSelectedContact();
+        if (!contact) {
+            toast.error('Please select a contact');
             return;
         }
 
@@ -170,17 +173,17 @@ ${new Date().toLocaleDateString('en-IN')}`;
             setSaving(true);
 
             const invoice = generateInvoiceMessage();
-            const bankAccount = getSelectedBankAccount();
 
             const requestData = {
-                friendId: friend._id,
-                friendName: friend.name,
-                friendEmail: friend.email,
+                friendId: contact._id,
+                friendName: contact.name,
+                friendEmail: contact.email,
                 amount,
                 reason: formData.reason,
                 dueDate: formData.dueDate || undefined,
                 bankAccountId: formData.bankAccountId || undefined,
                 reminderTiming: formData.reminderTiming,
+                reminderInterval: formData.reminderTiming === 'custom' ? formData.reminderInterval : undefined,
                 message: invoice,
             };
 
@@ -202,6 +205,7 @@ ${new Date().toLocaleDateString('en-IN')}`;
                 dueDate: '',
                 bankAccountId: '',
                 reminderTiming: 'immediate',
+                reminderInterval: 24,
                 customMessage: '',
             });
 
@@ -295,8 +299,8 @@ ${new Date().toLocaleDateString('en-IN')}`;
                                                 ₹{request.amount.toLocaleString()}
                                             </p>
                                             <span className={`inline-block px-2 py-1 mt-2 text-xs font-medium rounded-full ${request.status === 'paid'
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                                                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
                                                 }`}>
                                                 {request.status}
                                             </span>
@@ -380,24 +384,24 @@ ${new Date().toLocaleDateString('en-IN')}`;
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-5">
-                                    {/* Select Friend */}
+                                    {/* Select Contact */}
                                     <div>
-                                        <Label htmlFor="friend">Select Friend *</Label>
-                                        {friends.length === 0 ? (
+                                        <Label htmlFor="contact">Select Contact *</Label>
+                                        {contacts.length === 0 ? (
                                             <p className="text-sm text-zinc-500 mt-2">
-                                                No friends added yet. Add friends first.
+                                                No contacts added yet. Add contacts first in Friends page.
                                             </p>
                                         ) : (
                                             <select
-                                                id="friend"
+                                                id="contact"
                                                 value={formData.friendId}
                                                 onChange={(e) => setFormData({ ...formData, friendId: e.target.value })}
                                                 className="mt-1 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
-                                                <option value="">Choose a friend...</option>
-                                                {friends.map((friend) => (
-                                                    <option key={friend._id} value={friend.friend._id}>
-                                                        {friend.friend.name} ({friend.friend.email})
+                                                <option value="">Choose a contact...</option>
+                                                {contacts.map((contact) => (
+                                                    <option key={contact._id} value={contact._id}>
+                                                        {contact.name} ({contact.email})
                                                     </option>
                                                 ))}
                                             </select>
@@ -474,38 +478,27 @@ ${new Date().toLocaleDateString('en-IN')}`;
                                     {/* Reminder Timing */}
                                     <div>
                                         <Label>Reminder Timing</Label>
-                                        <div className="mt-2 grid grid-cols-2 gap-3">
+                                        <div className="mt-2 grid grid-cols-3 gap-3">
                                             <Button
                                                 type="button"
                                                 variant={formData.reminderTiming === 'immediate' ? 'default' : 'outline'}
                                                 onClick={() => setFormData({ ...formData, reminderTiming: 'immediate' })}
                                                 className="h-auto py-3"
                                             >
-                                                <div className="text-left">
+                                                <div className="text-left w-full">
                                                     <div className="font-medium">Send Now</div>
                                                     <div className="text-xs opacity-80">Immediate</div>
                                                 </div>
                                             </Button>
                                             <Button
                                                 type="button"
-                                                variant={formData.reminderTiming === 'day_before' ? 'default' : 'outline'}
-                                                onClick={() => setFormData({ ...formData, reminderTiming: 'day_before' })}
+                                                variant={formData.reminderTiming === 'custom' ? 'default' : 'outline'}
+                                                onClick={() => setFormData({ ...formData, reminderTiming: 'custom' })}
                                                 className="h-auto py-3"
                                             >
-                                                <div className="text-left">
-                                                    <div className="font-medium">Day Before</div>
-                                                    <div className="text-xs opacity-80">Auto reminder</div>
-                                                </div>
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant={formData.reminderTiming === 'day_of' ? 'default' : 'outline'}
-                                                onClick={() => setFormData({ ...formData, reminderTiming: 'day_of' })}
-                                                className="h-auto py-3"
-                                            >
-                                                <div className="text-left">
-                                                    <div className="font-medium">On Due Date</div>
-                                                    <div className="text-xs opacity-80">Auto reminder</div>
+                                                <div className="text-left w-full">
+                                                    <div className="font-medium">Custom Interval</div>
+                                                    <div className="text-xs opacity-80">Set hours</div>
                                                 </div>
                                             </Button>
                                             <Button
@@ -514,12 +507,77 @@ ${new Date().toLocaleDateString('en-IN')}`;
                                                 onClick={() => setFormData({ ...formData, reminderTiming: 'manual' })}
                                                 className="h-auto py-3"
                                             >
-                                                <div className="text-left">
+                                                <div className="text-left w-full">
                                                     <div className="font-medium">Manual Only</div>
                                                     <div className="text-xs opacity-80">No auto-send</div>
                                                 </div>
                                             </Button>
                                         </div>
+
+                                        {/* Custom Interval Input */}
+                                        {formData.reminderTiming === 'custom' && (
+                                            <div className="mt-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                                <Label htmlFor="reminderInterval" className="text-sm font-medium">
+                                                    Reminder Interval (in hours)
+                                                </Label>
+                                                <div className="mt-2 flex items-center gap-3">
+                                                    <Input
+                                                        id="reminderInterval"
+                                                        type="number"
+                                                        min="1"
+                                                        value={formData.reminderInterval}
+                                                        onChange={(e) => setFormData({ ...formData, reminderInterval: parseInt(e.target.value) || 24 })}
+                                                        className="w-32"
+                                                    />
+                                                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                                                        hours ({(formData.reminderInterval / 24).toFixed(1)} days)
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                                                    Reminder will be sent every {formData.reminderInterval} hours until marked as paid
+                                                </p>
+                                                <div className="mt-3 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                                    <p>💡 Common intervals:</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, reminderInterval: 12 })}
+                                                            className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        >
+                                                            12h
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, reminderInterval: 24 })}
+                                                            className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        >
+                                                            24h (1 day)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, reminderInterval: 48 })}
+                                                            className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        >
+                                                            48h (2 days)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, reminderInterval: 72 })}
+                                                            className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        >
+                                                            72h (3 days)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, reminderInterval: 168 })}
+                                                            className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                        >
+                                                            168h (1 week)
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Custom Message */}
@@ -563,6 +621,7 @@ ${new Date().toLocaleDateString('en-IN')}`;
                                                     dueDate: '',
                                                     bankAccountId: '',
                                                     reminderTiming: 'immediate',
+                                                    reminderInterval: 24,
                                                     customMessage: '',
                                                 });
                                             }}

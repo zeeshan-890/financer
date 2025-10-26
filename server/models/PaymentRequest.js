@@ -42,8 +42,12 @@ const PaymentRequestSchema = new mongoose.Schema({
     bankAccountNumber: String,
     reminderTiming: {
         type: String,
-        enum: ['immediate', 'day_before', 'day_of', 'manual'],
+        enum: ['immediate', 'custom', 'manual'],
         default: 'immediate'
+    },
+    reminderInterval: {
+        type: Number, // in hours
+        default: 24
     },
     message: {
         type: String,

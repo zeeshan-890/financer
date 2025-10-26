@@ -5,9 +5,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { groupApi, friendApi, transactionApi } from '@/lib/api';
+import { groupApi, transactionApi } from '@/lib/api';
 
-interface Friend {
+interface Contact {
     _id: string;
     name: string;
     email: string;
@@ -35,11 +35,15 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroup, setSelectedGroup] = useState('');
 
-    // Friend selection for custom split
-    const [friends, setFriends] = useState<Friend[]>([]);
+    // Contact selection for custom split
+    const [contacts, setContacts] = useState<Contact[]>([]);
     const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
     const [splitMode, setSplitMode] = useState<'equal' | 'custom'>('equal');
     const [customAmounts, setCustomAmounts] = useState<{ [key: string]: string }>({});
+
+    // Reminder settings
+    const [reminderEnabled, setReminderEnabled] = useState(false);
+    const [reminderInterval, setReminderInterval] = useState(24); // default 24 hours
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -50,17 +54,18 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
 
     const fetchData = async () => {
         try {
-            const [groupsRes, friendsRes] = await Promise.all([groupApi.getAllGroups(), friendApi.getAll()]);
+            const token = localStorage.getItem('token');
+            const [groupsRes, contactsRes] = await Promise.all([
+                groupApi.getAllGroups(),
+                fetch('/api/contacts', {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            ]);
             setGroups(groupsRes.data);
-            // Extract accepted friends from the response
-            const acceptedFriends = friendsRes.data
-                .filter((f: { status: string }) => f.status === 'accepted')
-                .map((f: { friend: { _id: string; name: string; email: string } }) => ({
-                    _id: f.friend._id,
-                    name: f.friend.name,
-                    email: f.friend.email
-                }));
-            setFriends(acceptedFriends);
+            if (contactsRes.ok) {
+                const contactsData = await contactsRes.json();
+                setContacts(contactsData);
+            }
         } catch (err) {
             console.error('Error fetching data:', err);
         }
@@ -110,14 +115,14 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
         try {
             // Prepare split data
             const splitBetween = selectedFriends.map((friendId) => {
-                const friend = friends.find((f) => f._id === friendId);
+                const contact = contacts.find((c) => c._id === friendId);
                 const group = groups.find((g) => g._id === selectedGroup);
                 const member = group?.members.find((m) => m.userId === friendId);
 
                 return {
                     userId: friendId,
-                    name: friend?.name || member?.name || 'Unknown',
-                    email: friend?.email || member?.email || '',
+                    name: contact?.name || member?.name || 'Unknown',
+                    email: contact?.email || member?.email || '',
                     amount: splitMode === 'equal' ? parseFloat(calculateEqualSplit()) : parseFloat(customAmounts[friendId] ?? '0'),
                 };
             });
@@ -132,6 +137,8 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                 isGroupExpense: true,
                 groupId: selectedGroup || undefined,
                 splitBetween,
+                reminderEnabled,
+                reminderInterval: reminderEnabled ? reminderInterval : undefined,
             });
 
             onSuccess();
@@ -228,24 +235,24 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                             </select>
                         </div>
 
-                        {/* Friend Selection */}
+                        {/* Contact Selection */}
                         <div>
                             <Label>Split With *</Label>
                             <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-                                {friends.length === 0 ? (
-                                    <p className="text-sm text-zinc-500">No friends added yet. Add friends in Settings.</p>
+                                {contacts.length === 0 ? (
+                                    <p className="text-sm text-zinc-500">No contacts added yet. Add contacts in Friends page.</p>
                                 ) : (
                                     <div className="space-y-2">
-                                        {friends.map((friend) => (
-                                            <label key={friend._id} className="flex items-center gap-2 cursor-pointer">
+                                        {contacts.map((contact) => (
+                                            <label key={contact._id} className="flex items-center gap-2 cursor-pointer">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedFriends.includes(friend._id)}
-                                                    onChange={() => toggleFriend(friend._id)}
+                                                    checked={selectedFriends.includes(contact._id)}
+                                                    onChange={() => toggleFriend(contact._id)}
                                                     className="h-4 w-4 rounded border-zinc-300"
                                                 />
-                                                <span className="text-sm">{friend.name}</span>
-                                                <span className="text-xs text-zinc-500">({friend.email})</span>
+                                                <span className="text-sm">{contact.name}</span>
+                                                <span className="text-xs text-zinc-500">({contact.email})</span>
                                             </label>
                                         ))}
                                     </div>
@@ -253,7 +260,7 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                             </div>
                             {selectedFriends.length > 0 && (
                                 <p className="mt-2 text-sm text-zinc-600">
-                                    {selectedFriends.length} friend{selectedFriends.length > 1 ? 's' : ''} selected
+                                    {selectedFriends.length} contact{selectedFriends.length > 1 ? 's' : ''} selected
                                 </p>
                             )}
                         </div>
@@ -293,10 +300,10 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                         <Label>Assign Amounts</Label>
                                         <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                                             {selectedFriends.map((friendId) => {
-                                                const friend = friends.find((f) => f._id === friendId);
+                                                const contact = contacts.find((c) => c._id === friendId);
                                                 return (
                                                     <div key={friendId} className="flex items-center gap-2">
-                                                        <span className="flex-1 text-sm">{friend?.name}</span>
+                                                        <span className="flex-1 text-sm">{contact?.name}</span>
                                                         <Input
                                                             type="number"
                                                             step="0.01"
@@ -324,6 +331,88 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
                                 placeholder="Add any additional details..."
                             />
                         </div>
+
+                        {/* Reminder Settings */}
+                        {selectedFriends.length > 0 && (
+                            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <input
+                                        type="checkbox"
+                                        id="reminderEnabled"
+                                        checked={reminderEnabled}
+                                        onChange={(e) => setReminderEnabled(e.target.checked)}
+                                        className="h-4 w-4 rounded border-zinc-300"
+                                    />
+                                    <Label htmlFor="reminderEnabled" className="cursor-pointer">
+                                        Enable Automatic Reminders
+                                    </Label>
+                                </div>
+
+                                {reminderEnabled && (
+                                    <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                        <Label htmlFor="reminderInterval" className="text-sm font-medium">
+                                            Reminder Interval (in hours)
+                                        </Label>
+                                        <div className="mt-2 flex items-center gap-3">
+                                            <Input
+                                                id="reminderInterval"
+                                                type="number"
+                                                min="1"
+                                                value={reminderInterval}
+                                                onChange={(e) => setReminderInterval(parseInt(e.target.value) || 24)}
+                                                className="w-32"
+                                            />
+                                            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                                                hours ({(reminderInterval / 24).toFixed(1)} days)
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                                            Reminders will be sent to all participants every {reminderInterval} hours
+                                        </p>
+                                        <div className="mt-3 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                            <p>💡 Quick select:</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReminderInterval(12)}
+                                                    className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                >
+                                                    12h
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReminderInterval(24)}
+                                                    className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                >
+                                                    24h (1 day)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReminderInterval(48)}
+                                                    className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                >
+                                                    48h (2 days)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReminderInterval(72)}
+                                                    className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                >
+                                                    72h (3 days)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReminderInterval(168)}
+                                                    className="px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                >
+                                                    168h (1 week)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex gap-2">
                             <Button type="button" onClick={onClose} variant="outline" className="flex-1">

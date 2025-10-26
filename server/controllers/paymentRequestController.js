@@ -1,5 +1,6 @@
 const PaymentRequest = require('../models/PaymentRequest');
 const BankAccount = require('../models/BankAccount');
+const Contact = require('../models/Contact');
 const User = require('../models/User');
 const emailService = require('../services/emailService');
 
@@ -44,17 +45,17 @@ exports.createRequest = async (req, res) => {
             return res.status(400).json({ message: 'Amount must be greater than 0' });
         }
 
-        // Verify friend exists
-        const friend = await User.findById(friendId);
-        if (!friend) {
-            return res.status(404).json({ message: 'Friend not found' });
+        // Verify contact exists
+        const contact = await Contact.findById(friendId);
+        if (!contact) {
+            return res.status(404).json({ message: 'Contact not found' });
         }
 
         const requestData = {
             userId: req.user.id,
             friendId,
-            friendName: friendName || friend.name,
-            friendEmail: friendEmail || friend.email,
+            friendName: friendName || contact.name,
+            friendEmail: friendEmail || contact.email,
             amount,
             reason,
             dueDate: dueDate || undefined,

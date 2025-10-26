@@ -8,7 +8,7 @@ const PaymentRequestSchema = new mongoose.Schema({
     },
     friendId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Contact',
         required: true
     },
     friendName: {

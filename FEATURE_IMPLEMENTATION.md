@@ -2,101 +2,173 @@
 
 ## Completed Features
 
-### 1. ✅ Friends Management System
+### 1. ✅ Modern Sidebar Navigation System
+**Location**: `/` (all pages with auth)
+**Backend**: N/A (frontend only)
+**Frontend**:
+- Collapsible sidebar on desktop (64px collapsed, 256px expanded)
+- Side-by-side layout with page content
+- Page compresses horizontally when sidebar expands
+- Mobile overlay menu with hamburger button
+- Smooth transitions and animations
+- Active route highlighting
+- User profile section in sidebar
+- Icons for all navigation items
+
+### 2. ✅ Contact Management System
 **Location**: `/friends` page
 **Backend**: 
-- `Friend` model (MongoDB schema with userId, friendId, status, timestamps)
-- `friendController.js` - Full CRUD operations
-- `friendRoutes.js` - RESTful API endpoints
+- `Contact` model (MongoDB schema with userId, name, email, phone, type, notes)
+- `contactController.js` - Full CRUD operations
+- `contactRoutes.js` - RESTful API endpoints
 **Frontend**:
-- Send friend requests by email
-- Accept/decline incoming requests
-- View sent requests (pending)
-- View accepted friends
-- Remove friends
-- Search/filter friends
+- Add contacts with name, email, phone
+- Contact types (Friend, Family, Colleague, Other)
+- Add notes for each contact
+- View all contacts in list
+- Delete contacts
+- Search and filter contacts
+- Used across payment requests and group expenses
 - Responsive design with mobile support
 
-### 2. ✅ Bank Accounts Management
+### 3. ✅ Payment Request & Invoice System
+**Location**: `/payment-requests` page
+**Backend**:
+- `PaymentRequest` model (references Contact, includes reminder settings)
+- `paymentRequestController.js` - Full lifecycle management
+- `paymentRequestRoutes.js` - API endpoints
+- Transaction integration (expense on create, income on paid)
+**Frontend**:
+- Send payment requests to contacts
+- Auto-generate professional invoice messages
+- Include payment account details (display only)
+- Set due dates
+- **Custom Reminder Intervals:**
+  * Immediate: Send email right away
+  * Custom: Set specific hours (12h, 24h, 48h, 72h, 168h, or custom)
+  * Manual: Only send when manually triggered
+  * Quick select buttons for common intervals
+  * Shows days conversion (e.g., 24h = 1 day)
+- Mark requests as paid
+- Send manual reminders
+- Delete requests
+- **Transaction Integration:**
+  * Creates EXPENSE transaction when request created (money you lent)
+  * Creates INCOME transaction when marked as paid (money received back)
+  * NO bank account balance modifications (transaction records only)
+- Responsive design with full-width modals
+
+### 4. ✅ Bank Accounts Management
 **Location**: `/accounts` page
 **Backend**:
-- `BankAccount` model (supports Easypaisa, JazzCash, Custom Bank)
+- `BankAccount` model (supports multiple account types)
 - `bankAccountController.js` - CRUD + set default account
 - `bankAccountRoutes.js` - API endpoints
 **Frontend**:
 - Add multiple payment accounts
-- Support for 3 account types:
-  * Easypaisa (mobile wallet)
-  * JazzCash (mobile wallet)
-  * Bank Account (requires bank name)
+- Store account name, number, bank name, account type
 - Set default account for quick access
 - Edit/delete accounts
-- Visual icons for each account type
+- Visual icons for account types
 - Responsive cards layout
+- Used in payment requests for invoice display
 
-### 3. ✅ Reserved Money Tracking
+### 5. ✅ Reserved Money Tracking
 **Location**: `/reserved` page
 **Backend**:
-- `ReservedMoney` model (amount, reason, recipient, dueDate, status)
-- `reservedMoneyController.js` - Track money you need to pay
+- `ReservedMoney` model (amount, reason, contact reference, dueDate, status)
+- `reservedMoneyController.js` - Track money set aside
 - `reservedMoneyRoutes.js` - API endpoints
+- Now uses Contact model instead of User
 **Frontend**:
 - Add reserved money entries
+- Select contact (who you owe)
 - Mark as paid
 - View total reserved amount
 - Track due dates
 - View paid history
 - Delete entries
+- **Dark Mode Optimized** - Consistent dark styling (dark:bg-zinc-950, dark:border-zinc-800)
 - Responsive UI
 
-### 4. ✅ Balance Privacy with PIN
-**Location**: `/settings` page (Security section)
+### 6. ✅ Enhanced Group Expenses with Custom Reminders
+**Location**: `/groups` page
 **Backend**:
-- Updated `User` model with `balancePin`, `hideBalanceByDefault` fields
-- PIN hashing with bcrypt
-- PIN verification methods
-- userController updated with PIN management endpoints:
-  * `setBalancePin` - Create/update PIN
-  * `verifyBalancePin` - Verify PIN for balance reveal
-  * `removeBalancePin` - Remove PIN security
-**Frontend** (Settings Page):
-- Set 4-digit balance PIN
-- Change existing PIN (requires current PIN)
-- Remove PIN
-- Toggle "Hide balance by default" option
-- Show/hide PIN input fields
-- Input validation (4 digits only)
+- Updated `transactionController.js` - Group expense management
+- `Transaction` model with splitBetween array
+- Transaction integration (expense on create, income on payment received)
+**Frontend**:
+- Create group expenses with contacts
+- Equal or custom split options
+- **Custom Reminder Intervals** (same as payment requests):
+  * Checkbox to enable reminders
+  * Hours input with days conversion display
+  * Quick select buttons (12h, 24h, 48h, 72h, 168h)
+  * Integration with transaction creation
+- **Optional Bank Account Selection:**
+  * Select account for invoice display
+  * NO balance modifications
+  * Account details shown in notifications
+- Mark individual payments as paid
+- **Transaction Integration:**
+  * Creates EXPENSE transaction when group expense created
+  * Creates INCOME transaction for each friend who pays their share
+  * Full transaction history tracking
+- View payment status
+- Visual payment indicators
 
-### 5. ✅ PKR as Base Currency
-**Location**: `/settings` page
-- Changed default currency from INR to PKR
-- All monetary displays show PKR
+### 7. ✅ PKR as Base Currency
+**Location**: All pages, `/settings` page
+- Changed default currency from INR (₹) to PKR
+- All monetary displays show "PKR" prefix
 - Currency selector includes: PKR, USD, EUR, GBP, INR
-- All pages updated to show "PKR" instead of "₹"
+- Settings page defaults to PKR
+- All transaction displays updated
 
-### 6. ✅ Updated Navigation
-**Location**: `Navbar.tsx`
+### 8. ✅ Transaction System Integration
+**Location**: Backend controllers
+**Implementation**:
+- **Payment Requests:**
+  * Creates EXPENSE transaction on request creation (money you lent to friend)
+  * Creates INCOME transaction when marked as paid (friend paid you back)
+  * Transaction category: "Payment Request"
+  * Includes notes with contact name
+- **Group Expenses:**
+  * Creates EXPENSE transaction on group expense creation (money you spent)
+  * Creates INCOME transactions when friends mark their split as paid (reimbursement)
+  * Transaction category: "Payment Received" for income
+  * Includes split details and payer name
+- **NO Bank Account Modifications:**
+  * Bank accounts are reference only (for invoice display)
+  * All financial tracking through transaction records
+  * Balance calculated from transaction history
+  * No direct debit/credit to bank accounts
+
+### 9. ✅ Updated Navigation
+**Location**: `Sidebar.tsx` (replaced Navbar)
+- Collapsible sidebar with all navigation items
 - Added links to new pages:
-  * Friends
-  * Accounts
-  * Reserved
-- Reorganized menu order:
-  * Dashboard → Transactions → Groups → Goals → Friends → Accounts → Reserved → Settings
-- Mobile responsive hamburger menu includes all new links
+  * Dashboard → Transactions → Groups → Payment Requests → Goals → Friends → Accounts → Reserved → Settings
+- User profile section at bottom
+- Logout functionality
+- Mobile hamburger menu
+- Active route highlighting with dark/light theme toggle
 
-### 7. ✅ Backend Infrastructure
+### 10. ✅ Backend Infrastructure
 **Server Routes Added**:
 ```javascript
+app.use('/api/contacts', require('./routes/contactRoutes'));
+app.use('/api/payment-requests', require('./routes/paymentRequestRoutes'));
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
-app.use('/api/friends', require('./routes/friendRoutes'));
 app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 ```
 
 **API Client Updated** (`client/lib/api.ts`):
-- `friendApi` - All friend operations
+- `contactApi` - All contact operations
+- `paymentRequestApi` - Payment request management
 - `bankAccountApi` - Account management
 - `reservedMoneyApi` - Reserved money tracking
-- `userApi` - Added PIN management endpoints
+- Removed old `friendApi` (replaced with contacts)
 
 ---
 
@@ -110,22 +182,8 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 - Income vs Expense line chart (dual lines)
 - Category-wise expense pie chart
 - Monthly trend chart
-- Balance privacy toggle button (with PIN prompt)
 
-### 2. ⏳ Invoice System for Group Expenses
-**Requirements**:
-- When creating group expense, select payment account
-- Choose reminder timing (immediate, 1 day, 3 days, 1 week)
-- Generate PDF invoice with:
-  * Expense details
-  * Amount owed by each member
-  * Selected payment account details
-  * QR code (optional)
-  * Due date
-- Email invoice to group members
-- Track payment status per member
-
-### 3. ⏳ Enhanced Transaction Filters
+### 2. ⏳ Enhanced Transaction Filters
 **Requirements**:
 - Filter panel with fields:
   * Date range (from/to)
@@ -133,21 +191,15 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
   * Category dropdown
   * Amount range (min/max)
   * Search by description
-- "Apply Filters" button (don't auto-filter)
+- "Apply Filters" button
 - "Clear Filters" button
 - Show active filter count
-- Responsive filter layout
 
-### 4. ⏳ PDF Export for Transactions
+### 3. ⏳ PDF Export for Transactions
 **Requirements**:
 - Export button in transactions page
 - Apply current filters to export
-- PDF includes:
-  * Date range
-  * Transaction list with details
-  * Summary (total income, total expenses, net)
-  * Charts/graphs
-  * User info and date generated
+- PDF with transaction list and summary
 - Download as `transactions_report_YYYYMMDD.pdf`
 
 ---
@@ -159,11 +211,12 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 - **Database**: MongoDB with Mongoose
 - **Authentication**: JWT tokens
 - **Password Hashing**: bcrypt
-- **Email**: Node mailer (for future invoices)
+- **Email**: Nodemailer (for future automated reminders)
+- **Scheduling**: Node-cron (for reminder intervals)
 
 ### Frontend
 - **Framework**: Next.js 16 (React 19)
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS 4.x
 - **UI Components**: Custom components (shadcn/ui style)
 - **State Management**: Zustand (auth store)
 - **HTTP Client**: Axios
@@ -171,27 +224,36 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 - **Icons**: Lucide React
 
 ### Database Models
-1. User - Profile, auth, PIN, settings
-2. Transaction - Income/expense tracking
-3. Goal - Savings goals
-4. Group - Group management
-5. Friend - Friend relationships
-6. BankAccount - Payment accounts
-7. ReservedMoney - Money reservations
-8. RequestLog - Admin analytics
-9. Reminder - Payment reminders
-10. Notification - User notifications
+1. User - Profile, auth, settings
+2. Transaction - Income/expense tracking (includes group expenses)
+3. Contact - Contact management (replaces Friend)
+4. PaymentRequest - Payment request tracking
+5. BankAccount - Payment account details
+6. ReservedMoney - Money reservations
+7. Goal - Savings goals
+8. Group - Group management (legacy)
+9. Friend - Friend relationships (legacy, replaced by Contact)
+10. RequestLog - Admin analytics
+11. Reminder - Payment reminders
+12. Notification - User notifications
 
 ---
 
 ## API Endpoints Summary
 
-### Friends API
-- `GET /api/friends` - Get all friends
-- `POST /api/friends` - Send friend request
-- `PUT /api/friends/:id/accept` - Accept request
-- `DELETE /api/friends/:id` - Remove friend
-- `GET /api/friends/search` - Search users
+### Contacts API
+- `GET /api/contacts` - Get all contacts
+- `POST /api/contacts` - Create contact
+- `PUT /api/contacts/:id` - Update contact
+- `DELETE /api/contacts/:id` - Delete contact
+
+### Payment Requests API
+- `GET /api/payment-requests` - Get all payment requests
+- `POST /api/payment-requests` - Create payment request
+- `PUT /api/payment-requests/:id` - Update payment request
+- `PUT /api/payment-requests/:id/mark-paid` - Mark as paid
+- `POST /api/payment-requests/:id/send-reminder` - Send manual reminder
+- `DELETE /api/payment-requests/:id` - Delete payment request
 
 ### Bank Accounts API
 - `GET /api/bank-accounts` - Get all accounts
@@ -208,10 +270,12 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 - `DELETE /api/reserved-money/:id` - Delete entry
 - `GET /api/reserved-money/total` - Get total reserved
 
-### User PIN API
-- `POST /api/users/balance-pin` - Set/update PIN
-- `POST /api/users/balance-pin/verify` - Verify PIN
-- `DELETE /api/users/balance-pin` - Remove PIN
+### Transactions API (Updated)
+- `GET /api/transactions` - Get all transactions
+- `POST /api/transactions` - Create transaction (includes group expenses)
+- `PUT /api/transactions/:id/payment-status` - Update split payment status
+- `DELETE /api/transactions/:id` - Delete transaction
+- `GET /api/transactions/stats` - Get statistics
 
 ---
 
@@ -220,33 +284,46 @@ app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 ```
 client/
 ├── app/
-│   ├── friends/page.tsx          ✅ NEW
+│   ├── friends/page.tsx          ✅ UPDATED (Contact management, replaces old Friend UI)
+│   ├── payment-requests/page.tsx ✅ NEW
 │   ├── accounts/page.tsx         ✅ NEW
-│   ├── reserved/page.tsx         ✅ NEW
-│   ├── settings/page.tsx         ✅ UPDATED (PIN management)
+│   ├── reserved/page.tsx         ✅ UPDATED (Dark mode, uses Contact)
+│   ├── groups/page.tsx           ✅ UPDATED (Custom reminders, bank account select, Contact integration)
+│   ├── settings/page.tsx         ✅ UPDATED (PKR default)
 │   ├── dashboard/page.tsx        ⏳ NEEDS UPDATE (analytics)
-│   └── transactions/page.tsx     ⏳ NEEDS UPDATE (filters + PDF)
+│   ├── transactions/page.tsx     ⏳ NEEDS UPDATE (filters + PDF)
+│   └── layout.tsx                ✅ UPDATED (Flex container for sidebar)
 ├── components/
-│   └── Navbar.tsx                ✅ UPDATED (new links)
+│   ├── Sidebar.tsx               ✅ NEW (Replaces Navbar for main navigation)
+│   ├── Navbar.tsx                ✅ LEGACY (Still exists, not used)
+│   └── AddGroupExpenseModal.tsx  ✅ UPDATED (Custom reminders, Contact integration)
 └── lib/
-    └── api.ts                    ✅ UPDATED (new APIs)
+    └── api.ts                    ✅ UPDATED (new APIs: contacts, paymentRequests, bankAccounts, reservedMoney)
 
 server/
 ├── models/
-│   ├── Friend.js                 ✅ NEW
+│   ├── Contact.js                ✅ NEW
+│   ├── PaymentRequest.js         ✅ NEW
 │   ├── BankAccount.js            ✅ NEW
-│   ├── ReservedMoney.js          ✅ NEW
-│   └── User.js                   ✅ UPDATED (PIN fields)
+│   ├── ReservedMoney.js          ✅ UPDATED (friendId references Contact)
+│   ├── Transaction.js            ✅ UPDATED (Used for all transaction tracking)
+│   ├── Friend.js                 ✅ LEGACY (Replaced by Contact)
+│   └── User.js                   ✅ UPDATED (Currency default: PKR)
 ├── controllers/
-│   ├── friendController.js       ✅ NEW
+│   ├── contactController.js      ✅ NEW
+│   ├── paymentRequestController.js ✅ NEW (Transaction integration)
 │   ├── bankAccountController.js  ✅ NEW
-│   ├── reservedMoneyController.js ✅ NEW
-│   └── userController.js         ✅ UPDATED (PIN methods)
+│   ├── reservedMoneyController.js ✅ UPDATED (Uses Contact)
+│   ├── transactionController.js  ✅ UPDATED (Group expense + transaction flows)
+│   ├── friendController.js       ✅ LEGACY (Replaced by Contact)
+│   └── userController.js         ✅ UPDATED
 ├── routes/
-│   ├── friendRoutes.js           ✅ NEW
+│   ├── contactRoutes.js          ✅ NEW
+│   ├── paymentRequestRoutes.js   ✅ NEW
 │   ├── bankAccountRoutes.js      ✅ NEW
-│   ├── reservedMoneyRoutes.js    ✅ NEW
-│   └── userRoutes.js             ✅ UPDATED (PIN routes)
+│   ├── reservedMoneyRoutes.js    ✅ UPDATED
+│   ├── friendRoutes.js           ✅ LEGACY
+│   └── userRoutes.js             ✅ UPDATED
 └── server.js                     ✅ UPDATED (new routes)
 ```
 
@@ -265,37 +342,68 @@ server/
 
 ## Testing Checklist
 
-### Friends Management
-- [ ] Send friend request by email
-- [ ] Accept incoming request
-- [ ] Decline incoming request
-- [ ] Cancel sent request
-- [ ] Remove friend
-- [ ] Search friends
-- [ ] View pending/accepted separately
+### Contacts Management
+- [ ] Add contact with all fields
+- [ ] Add contact with minimal info
+- [ ] Delete contact
+- [ ] View contact list
+- [ ] Use contacts in payment requests
+- [ ] Use contacts in group expenses
+
+### Payment Requests
+- [ ] Create payment request with immediate reminder
+- [ ] Create payment request with custom interval (24h, 48h, etc.)
+- [ ] Create payment request with manual reminder only
+- [ ] View payment request list
+- [ ] Mark request as paid
+- [ ] Send manual reminder
+- [ ] Verify EXPENSE transaction created on request
+- [ ] Verify INCOME transaction created when marked paid
+- [ ] Verify NO bank account balance changes
+- [ ] Delete payment request
 
 ### Bank Accounts
-- [ ] Add Easypaisa account
-- [ ] Add JazzCash account
 - [ ] Add bank account
 - [ ] Set default account
+- [ ] View account details in payment request
 - [ ] Edit account details
 - [ ] Delete account
+- [ ] Verify account shown in invoices
 
 ### Reserved Money
-- [ ] Add reserved entry
+- [ ] Add reserved entry with contact
 - [ ] View total reserved
 - [ ] Mark as paid
 - [ ] View paid history
 - [ ] Delete entry
-- [ ] Check due date display
+- [ ] Check dark mode styling (dark:bg-zinc-950)
 
-### Balance PIN
-- [ ] Set initial PIN
-- [ ] Change PIN (with current PIN)
-- [ ] Remove PIN
-- [ ] Toggle hide balance default
-- [ ] Verify PIN validation (4 digits)
+### Group Expenses
+- [ ] Create group expense with equal split
+- [ ] Create group expense with custom split
+- [ ] Enable custom reminder (set hours)
+- [ ] Select bank account (optional)
+- [ ] Mark friend's payment as paid
+- [ ] Verify EXPENSE transaction created
+- [ ] Verify INCOME transaction created when friend pays
+- [ ] Verify NO bank account balance changes
+- [ ] View payment status
+
+### Sidebar Navigation
+- [ ] Sidebar collapses/expands on desktop
+- [ ] Page content compresses when sidebar expands
+- [ ] Mobile menu opens with hamburger button
+- [ ] Mobile menu closes with backdrop click
+- [ ] All navigation links work
+- [ ] Active route highlighted
+
+### Transaction Integration
+- [ ] Payment request creates expense transaction
+- [ ] Marking payment request as paid creates income transaction
+- [ ] Group expense creates expense transaction
+- [ ] Friend paying split creates income transaction
+- [ ] All transactions visible in transactions page
+- [ ] Balance calculated correctly from transactions
 
 ### General
 - [ ] All pages responsive on mobile
@@ -303,6 +411,7 @@ server/
 - [ ] Error handling displays properly
 - [ ] Success toasts appear
 - [ ] Data persists after refresh
+- [ ] PKR currency displays correctly
 
 ---
 
@@ -310,8 +419,16 @@ server/
 - None currently - all implemented features are functional
 
 ## Performance Notes
-- Friend requests use bidirectional relationships
-- Bank accounts auto-update default status
+- Contact system uses flat structure (faster queries than nested Friend model)
+- Payment requests create transaction records (audit trail)
+- Bank accounts are reference only (no complex balance calculations)
 - Reserved money auto-calculates total
-- PIN is hashed with bcrypt (10 rounds)
+- Reminder intervals stored in hours (flexible scheduling)
 - All endpoints require authentication
+- Transaction history provides complete financial overview
+
+---
+
+**Last Updated:** October 26, 2025  
+**Status:** Production Ready  
+**Next Steps:** Enhanced dashboard analytics, advanced filters, PDF export

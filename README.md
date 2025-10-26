@@ -48,11 +48,15 @@
 
 ✨ **Personal Finance Management** - Track income, expenses, and savings with detailed analytics  
 👥 **Group Expense Splitting** - Split bills equally or custom amounts with friends  
-📧 **Automated Email Reminders** - Never forget payments with scheduled email notifications  
+📧 **Smart Email Reminders** - Customizable reminder intervals (hours/days) with automated scheduling  
+💳 **Payment Request System** - Send professional invoices to contacts with transaction tracking  
+🏦 **Bank Account Integration** - Track expenses and payments with automatic transaction records  
+👤 **Contact Management** - Organize friends and contacts for easy expense sharing  
 🔐 **Email OTP Verification** - Secure authentication with one-time password verification  
 📊 **Visual Analytics** - Beautiful charts and graphs for spending insights  
 🎯 **Goal Tracking** - Set and monitor savings goals with progress visualization  
-💱 **Multi-Currency Support** - Handle multiple currencies (INR, USD, EUR, GBP)  
+💱 **PKR Currency Support** - Primary currency in PKR with multi-currency options  
+🎨 **Modern Sidebar Layout** - Responsive collapsible sidebar navigation  
 🌙 **Dark Mode Ready** - Full dark mode support for comfortable viewing  
 
 ---
@@ -73,6 +77,7 @@
   - Notes and descriptions
   - Filter by type, category, date range
   - Search functionality
+  - Automatic transaction history for all activities
 - **Dashboard Analytics**
   - Current balance overview
   - Monthly expense/income summary
@@ -85,26 +90,68 @@
   - Overspending alerts
   - Income vs expense comparison
 
+### 👥 Contact & Friend Management
+- **Contact System**
+  - Add contacts with name, email, phone
+  - Store contact types (Friend, Family, Colleague, etc.)
+  - Add notes for each contact
+  - Search and filter contacts
+  - Use contacts in payment requests and group expenses
+  - Integrated across all payment features
+
+### 💰 Payment Request System
+- **Professional Invoices**
+  - Send payment requests to contacts
+  - Auto-generate invoice messages
+  - Include payment account details
+  - Set due dates for payments
+  - Track payment status (pending/paid)
+  - **Custom Reminder Intervals**
+    - Choose reminder timing: Immediate, Custom hours, or Manual
+    - Set custom intervals (12h, 24h, 48h, 72h, 168h, or any duration)
+    - Automatic email reminders at specified intervals
+- **Transaction Integration**
+  - Creates expense transaction when request sent (money you lent)
+  - Creates income transaction when marked as paid (money received back)
+  - Full transaction history tracking
+  - No bank account modifications (transaction records only)
+
+### 🏦 Bank Accounts & Reserved Money
+- **Bank Account Management**
+  - Add multiple payment accounts
+  - Store account details for invoices
+  - Display account info in payment requests
+  - Reference accounts in transactions
+- **Reserved Money Tracking**
+  - Track money set aside for specific purposes
+  - Assign to contacts
+  - Set due dates
+  - Mark as paid when settled
+  - View total reserved amount
+  - **Dark Mode Optimized** - Consistent styling across themes
+
 ### 👥 Group Finance & Bill Splitting
-- **Friends Management**
-  - Add friends with email/name/phone
-  - Store additional info (university, hostel, batch, address)
-  - Search and filter friends
-  - Remove friends
 - **Group Expenses**
   - Create group expenses with custom titles
   - **Equal Split** - Automatically divide among all members
   - **Custom Split** - Assign specific amounts to each person
+  - Select contacts to split with
   - Track who paid upfront
   - Monitor pending/paid status
   - Visual payment status indicators
+  - **Custom Reminder Intervals** - Same flexible reminder system as payment requests
+  - **Optional Bank Account Selection** - Reference payment account without balance changes
 - **Payment Tracking**
   - Mark individual payments as paid
   - Track payment dates
   - Calculate amounts to receive
   - Split history for each expense
+  - **Transaction Integration**
+    - Creates expense transaction when group expense created
+    - Creates income transaction when friends pay their share
+    - Full transaction history for all reimbursements
 
-### 📧 Email Notification System
+### 📧 Email Notification System with Custom Reminders
 - **OTP Verification Emails**
   - Beautiful HTML templates
   - Clear OTP display
@@ -115,10 +162,13 @@
   - Includes who paid upfront
   - Professional gradient design
 - **Payment Reminder Emails**
-  - Automated cron job (daily at 9:00 AM)
-  - Resends every 3 days for unpaid amounts
+  - **Flexible Scheduling Options:**
+    - Immediate: Send email right away
+    - Custom Interval: Set specific hours (e.g., every 12, 24, 48 hours)
+    - Manual: Only send when you manually trigger
   - Shows amount due and payee details
   - Urgent styling for pending payments
+  - Automated cron job for scheduled reminders
 
 ### 🎯 Savings Goals
 - **Goal Creation**
@@ -143,10 +193,22 @@
 
 ### ⚙️ Settings & Preferences
 - **Profile Management** - Update name, email, currency
-- **Currency Selection** - INR, USD, EUR, GBP support
+- **Currency Selection** - PKR (default), USD, EUR, GBP, INR support
 - **Budget Configuration** - Set monthly spending limits
 - **Income Tracking** - Record monthly income
 - **Theme Support** - Dark/Light mode ready
+
+### 🎨 Modern UI/UX
+- **Responsive Sidebar Navigation**
+  - Collapsible sidebar (desktop)
+  - Side-by-side layout with page content
+  - Page compresses when sidebar expands
+  - Mobile overlay menu with hamburger button
+  - Smooth transitions and animations
+- **Dark Mode Consistency**
+  - All components optimized for dark theme
+  - Proper contrast and readability
+  - Consistent styling across all pages
 
 ---
 
@@ -205,24 +267,22 @@ financer/
 │   │   ├── layout.tsx             # Root layout
 │   │   ├── globals.css            # Global styles
 │   │   ├── dashboard/             # Dashboard page
-│   │   │   └── page.tsx
 │   │   ├── transactions/          # Transactions page
-│   │   │   └── page.tsx
 │   │   ├── groups/                # Group expenses page
-│   │   │   └── page.tsx
 │   │   ├── goals/                 # Savings goals page
-│   │   │   └── page.tsx
+│   │   ├── friends/               # Contacts management page
+│   │   ├── payment-requests/      # Payment requests page
+│   │   ├── accounts/              # Bank accounts page
+│   │   ├── reserved/              # Reserved money page
 │   │   ├── settings/              # Settings page
-│   │   │   └── page.tsx
 │   │   ├── login/                 # Login page
-│   │   │   └── page.tsx
 │   │   ├── signup/                # Signup page
-│   │   │   └── page.tsx
 │   │   └── verify-otp/            # OTP verification page
 │   │       └── page.tsx
 │   │
 │   ├── components/                # React Components
-│   │   ├── Navbar.tsx            # Navigation bar
+│   │   ├── Navbar.tsx            # Top navigation bar (legacy)
+│   │   ├── Sidebar.tsx           # Collapsible sidebar navigation
 │   │   ├── AddTransactionModal.tsx
 │   │   ├── AddGroupExpenseModal.tsx
 │   │   └── ui/                   # UI Components
@@ -252,16 +312,26 @@ financer/
 │   ├── controllers/               # Route Controllers
 │   │   ├── authController.js     # Auth logic (register, login, OTP)
 │   │   ├── userController.js     # User operations
-│   │   ├── transactionController.js # Transaction CRUD
+│   │   ├── transactionController.js # Transaction CRUD + group expenses
+│   │   ├── contactController.js  # Contact management
+│   │   ├── paymentRequestController.js # Payment requests
+│   │   ├── bankAccountController.js # Bank accounts
+│   │   ├── reservedMoneyController.js # Reserved money
 │   │   ├── groupController.js    # Group management
 │   │   ├── goalController.js     # Goals CRUD
+│   │   ├── friendController.js   # Friend operations (legacy)
 │   │   └── reminderController.js # Reminder operations
 │   │
 │   ├── models/                    # Database Models (Mongoose)
 │   │   ├── User.js               # User schema
-│   │   ├── Transaction.js        # Transaction schema
+│   │   ├── Transaction.js        # Transaction schema (includes group expenses)
+│   │   ├── Contact.js            # Contact schema (new)
+│   │   ├── PaymentRequest.js     # Payment request schema (new)
+│   │   ├── BankAccount.js        # Bank account schema (new)
+│   │   ├── ReservedMoney.js      # Reserved money schema (new)
 │   │   ├── Group.js              # Group schema
 │   │   ├── Goal.js               # Goal schema
+│   │   ├── Friend.js             # Friend schema (legacy)
 │   │   ├── Reminder.js           # Reminder schema
 │   │   └── Notification.js       # Notification schema
 │   │
@@ -269,8 +339,13 @@ financer/
 │   │   ├── authRoutes.js         # /api/auth/*
 │   │   ├── userRoutes.js         # /api/users/*
 │   │   ├── transactionRoutes.js  # /api/transactions/*
+│   │   ├── contactRoutes.js      # /api/contacts/* (new)
+│   │   ├── paymentRequestRoutes.js # /api/payment-requests/* (new)
+│   │   ├── bankAccountRoutes.js  # /api/bank-accounts/* (new)
+│   │   ├── reservedMoneyRoutes.js # /api/reserved-money/* (new)
 │   │   ├── groupRoutes.js        # /api/groups/*
 │   │   ├── goalRoutes.js         # /api/goals/*
+│   │   ├── friendRoutes.js       # /api/friends/* (legacy)
 │   │   └── reminderRoutes.js     # /api/reminders/*
 │   │
 │   ├── middlewares/               # Express Middlewares
@@ -813,24 +888,13 @@ PATCH /api/goals/:goalId/add-funds
   name: String (required),
   email: String (required, unique),
   password: String (required, hashed),
-  currency: String (default: 'INR'),
+  currency: String (default: 'PKR'),
   monthlyBudget: Number,
   income: Number,
   isVerified: Boolean (default: false),
   verificationOTP: String,
   otpExpiry: Date,
-  friends: [{
-    userId: ObjectId,
-    name: String,
-    email: String,
-    phone: String,
-    university: String,
-    batch: String,
-    hostel: String,
-    address: String,
-    notes: String,
-    addedAt: Date
-  }],
+  friends: [/* Legacy - now using Contact model */],
   createdAt: Date,
   updatedAt: Date
 }
@@ -848,6 +912,7 @@ PATCH /api/goals/:goalId/add-funds
   date: Date (default: now),
   notes: String,
   isGroupExpense: Boolean (default: false),
+  paidBy: ObjectId (ref: User), // Who paid upfront
   groupId: ObjectId (ref: Group),
   splitBetween: [{
     userId: ObjectId (ref: User),
@@ -858,6 +923,81 @@ PATCH /api/goals/:goalId/add-funds
     paidAt: Date,
     _id: ObjectId
   }],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Contact Model (New)
+
+```javascript
+{
+  userId: ObjectId (ref: User, required),
+  name: String (required),
+  email: String (required),
+  phone: String,
+  type: String (default: 'Friend'), // Friend, Family, Colleague, etc.
+  notes: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### PaymentRequest Model (New)
+
+```javascript
+{
+  userId: ObjectId (ref: User, required), // Requester
+  friendId: ObjectId (ref: Contact, required),
+  friendName: String,
+  friendEmail: String,
+  amount: Number (required),
+  reason: String (required),
+  dueDate: Date,
+  bankAccountId: ObjectId (ref: BankAccount), // For display only
+  bankAccountName: String,
+  bankAccountNumber: String,
+  reminderTiming: String (enum: ['immediate', 'custom', 'manual']),
+  reminderInterval: Number, // Hours
+  message: String, // Invoice text
+  status: String (enum: ['pending', 'paid', 'cancelled'], default: 'pending'),
+  paidAt: Date,
+  reminderSent: Boolean,
+  lastReminderSentAt: Date,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### BankAccount Model (New)
+
+```javascript
+{
+  userId: ObjectId (ref: User, required),
+  accountName: String (required),
+  accountNumber: String (required),
+  bankName: String,
+  accountType: String (required), // Checking, Savings, etc.
+  balance: Number (default: 0), // For display tracking
+  isDefault: Boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### ReservedMoney Model (New)
+
+```javascript
+{
+  userId: ObjectId (ref: User, required),
+  amount: Number (required),
+  reason: String (required),
+  friendId: ObjectId (ref: Contact), // Who you owe
+  friendName: String,
+  dueDate: Date,
+  status: String (enum: ['reserved', 'paid'], default: 'reserved'),
+  paidAt: Date,
+  notes: String,
   createdAt: Date,
   updatedAt: Date
 }
@@ -888,8 +1028,9 @@ PATCH /api/goals/:goalId/add-funds
 
 ```javascript
 {
-  type: String (enum: ['payment', 'goal', 'budget'], required),
+  type: String (enum: ['payment_due', 'payment_request', 'goal', 'budget'], required),
   transactionId: ObjectId (ref: Transaction),
+  paymentRequestId: ObjectId (ref: PaymentRequest),
   goalId: ObjectId (ref: Goal),
   toUser: ObjectId (ref: User, required),
   fromUser: ObjectId (ref: User),
@@ -899,6 +1040,7 @@ PATCH /api/goals/:goalId/add-funds
   sent: Boolean (default: false),
   lastSentAt: Date,
   paymentReceived: Boolean (default: false),
+  intervalHours: Number, // Custom reminder interval
   createdAt: Date,
   updatedAt: Date
 }

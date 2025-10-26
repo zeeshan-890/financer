@@ -64,7 +64,17 @@ export default function Sidebar() {
 
             {/* Sidebar */}
             <aside
-                className={`${mobileOpen ? 'fixed left-0 top-0 z-40 h-screen translate-x-0' : 'fixed left-0 top-0 z-40 h-screen -translate-x-full'} lg:static lg:translate-x-0 lg:h-screen transition-all duration-300 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 ${collapsed ? 'w-16' : 'w-64'}`}
+                className={`
+                    fixed lg:static
+                    left-0 top-0 
+                    h-screen 
+                    z-40 lg:z-auto
+                    transition-all duration-300 
+                    bg-white dark:bg-zinc-950 
+                    border-r border-zinc-200 dark:border-zinc-800
+                    ${collapsed ? 'w-16' : 'w-64'}
+                    ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                `}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo & Toggle */}

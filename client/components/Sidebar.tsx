@@ -93,8 +93,8 @@ export default function Sidebar() {
                                     href={item.href}
                                     onClick={() => setMobileOpen(false)}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
-                                            ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
-                                            : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                                        ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                                        : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
                                         } ${collapsed ? 'justify-center' : ''}`}
                                     title={collapsed ? item.label : undefined}
                                 >

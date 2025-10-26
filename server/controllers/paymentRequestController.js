@@ -2,6 +2,7 @@ const PaymentRequest = require('../models/PaymentRequest');
 const BankAccount = require('../models/BankAccount');
 const Contact = require('../models/Contact');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 const emailService = require('../services/emailService');
 
 // Get all payment requests
@@ -64,18 +65,11 @@ exports.createRequest = async (req, res) => {
             status: 'pending'
         };
 
-        // If bank account is specified, add it and deduct amount
+        // Store bank account reference if provided (for display purposes only)
+        let bankAccount = null;
         if (bankAccountId) {
-            const bankAccount = await BankAccount.findById(bankAccountId);
+            bankAccount = await BankAccount.findById(bankAccountId);
             if (bankAccount && bankAccount.userId.toString() === req.user.id) {
-                // Deduct amount from bank account
-                if (bankAccount.balance < amount) {
-                    return res.status(400).json({ message: 'Insufficient balance in bank account' });
-                }
-
-                bankAccount.balance -= amount;
-                await bankAccount.save();
-
                 requestData.bankAccountId = bankAccountId;
                 requestData.bankAccountName = bankAccount.accountName;
                 requestData.bankAccountNumber = bankAccount.accountNumber;
@@ -84,6 +78,19 @@ exports.createRequest = async (req, res) => {
 
         const paymentRequest = new PaymentRequest(requestData);
         await paymentRequest.save();
+
+        // Create an EXPENSE transaction (money you lent/gave to friend)
+        await Transaction.create({
+            title: `Payment Request: ${reason}`,
+            amount,
+            type: 'expense',
+            category: 'Payment Request',
+            date: new Date(),
+            userId: req.user.id,
+            notes: `Payment requested from ${friendName || contact.name}`,
+        });
+
+        console.log(`Created payment request expense transaction: ${amount} for ${reason}`);
 
         // Send immediate reminder if selected
         if (reminderTiming === 'immediate') {
@@ -141,16 +148,22 @@ exports.updateRequest = async (req, res) => {
         }
 
         if (status) {
+            const previousStatus = request.status;
             request.status = status;
-            if (status === 'paid' && !request.paidAt) {
-                // Add amount back to bank account if one was used
-                if (request.bankAccountId) {
-                    const bankAccount = await BankAccount.findById(request.bankAccountId);
-                    if (bankAccount && bankAccount.userId.toString() === req.user.id) {
-                        bankAccount.balance += request.amount;
-                        await bankAccount.save();
-                    }
-                }
+            
+            // If changing from pending to paid, create an INCOME transaction
+            if (status === 'paid' && previousStatus === 'pending' && !request.paidAt) {
+                await Transaction.create({
+                    title: `Payment Received: ${request.reason}`,
+                    amount: request.amount,
+                    type: 'income',
+                    category: 'Payment Request',
+                    date: new Date(),
+                    userId: req.user.id,
+                    notes: `Payment received from ${request.friendName}`,
+                });
+
+                console.log(`Created payment received income transaction: ${request.amount} from ${request.friendName}`);
                 request.paidAt = paidAt || new Date();
             }
         }
@@ -177,14 +190,18 @@ exports.markAsPaid = async (req, res) => {
             return res.status(404).json({ message: 'Payment request not found' });
         }
 
-        // Add amount back to bank account if one was used
-        if (request.bankAccountId) {
-            const bankAccount = await BankAccount.findById(request.bankAccountId);
-            if (bankAccount && bankAccount.userId.toString() === req.user.id) {
-                bankAccount.balance += request.amount;
-                await bankAccount.save();
-            }
-        }
+        // Create an INCOME transaction (friend paid you back)
+        await Transaction.create({
+            title: `Payment Received: ${request.reason}`,
+            amount: request.amount,
+            type: 'income',
+            category: 'Payment Request',
+            date: new Date(),
+            userId: req.user.id,
+            notes: `Payment received from ${request.friendName}`,
+        });
+
+        console.log(`Created payment received income transaction: ${request.amount} from ${request.friendName}`);
 
         request.status = 'paid';
         request.paidAt = new Date();

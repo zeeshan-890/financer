@@ -4,10 +4,11 @@ const Group = require('../models/Group');
 const User = require('../models/User');
 const Reminder = require('../models/Reminder');
 const ReservedMoney = require('../models/ReservedMoney');
+const BankAccount = require('../models/BankAccount');
 const { sendExpenseNotification } = require('../services/emailService');
 
 exports.addTransaction = asyncHandler(async (req, res) => {
-    const { title, amount, type, category, date, groupId, splitBetween, notes, isGroupExpense } = req.body;
+    const { title, amount, type, category, date, groupId, splitBetween, notes, isGroupExpense, bankAccountId } = req.body;
 
     if (!title || !amount || !type || !category) {
         res.status(400);
@@ -35,8 +36,9 @@ exports.addTransaction = asyncHandler(async (req, res) => {
             txData.groupId = groupId;
         }
 
-        // Create transaction
+        // Create transaction (this is the expense record)
         const tx = await Transaction.create(txData);
+        console.log(`Created group expense transaction: ${amount} for ${title}`);
 
         // Create reminders and send immediate email notifications
         for (const split of splitBetween) {
@@ -116,7 +118,7 @@ exports.updatePaymentStatus = asyncHandler(async (req, res) => {
         split.paidAt = new Date();
 
         // Create an income transaction for the user who paid upfront
-        await Transaction.create({
+        const incomeTransaction = await Transaction.create({
             title: `Payment received from ${split.name} for ${tx.title}`,
             amount: split.amountOwed,
             type: 'income',
@@ -126,6 +128,8 @@ exports.updatePaymentStatus = asyncHandler(async (req, res) => {
             notes: `Friend payment received for group expense`,
             isGroupExpense: false,
         });
+
+        console.log(`Created income transaction: ${split.amountOwed} from ${split.name}`);
 
         // Mark reminder as payment received and deactivate
         await Reminder.updateMany(

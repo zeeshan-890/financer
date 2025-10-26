@@ -8,14 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Receipt, Plus, Check, X } from 'lucide-react';
-import { transactionApi, friendApi } from '@/lib/api';
+import { transactionApi, bankAccountApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-interface Friend {
+interface Contact {
     _id: string;
-    userId?: string;
     name: string;
     email: string;
+}
+
+interface BankAccount {
+    _id: string;
+    accountName: string;
+    accountNumber: string;
+    bankName?: string;
+    balance: number;
+    isDefault?: boolean;
 }
 
 interface Split {
@@ -42,7 +50,8 @@ export default function GroupExpensesPage() {
     const { isAuthenticated, isHydrated } = useAuthStore();
     const router = useRouter();
     const [expenses, setExpenses] = useState<GroupExpense[]>([]);
-    const [friends, setFriends] = useState<Friend[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Add expense modal states
@@ -53,7 +62,12 @@ export default function GroupExpensesPage() {
     const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal');
     const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
     const [customSplits, setCustomSplits] = useState<{ [key: string]: string }>({});
+    const [selectedBankAccount, setSelectedBankAccount] = useState('');
     const [saving, setSaving] = useState(false);
+
+    // Reminder settings
+    const [reminderEnabled, setReminderEnabled] = useState(false);
+    const [reminderInterval, setReminderInterval] = useState(24); // default 24 hours
 
     useEffect(() => {
         if (!isHydrated) return;
@@ -68,9 +82,13 @@ export default function GroupExpensesPage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [transactionsRes, friendsRes] = await Promise.all([
+            const token = localStorage.getItem('token');
+            const [transactionsRes, contactsRes, bankAccountsRes] = await Promise.all([
                 transactionApi.getAllTransactions(),
-                friendApi.getAll(),
+                fetch('/api/contacts', {
+                    headers: { Authorization: `Bearer ${token}` }
+                }),
+                bankAccountApi.getAll()
             ]);
 
             // Filter only group expenses
@@ -80,15 +98,14 @@ export default function GroupExpensesPage() {
             });
             setExpenses(groupExpenses as GroupExpense[]);
 
-            // Extract friend data from the response
-            const acceptedFriends = friendsRes.data
-                .filter((f: { status: string }) => f.status === 'accepted')
-                .map((f: { friend: { _id: string; name: string; email: string } }) => ({
-                    _id: f.friend._id,
-                    name: f.friend.name,
-                    email: f.friend.email
-                }));
-            setFriends(acceptedFriends);
+            // Get contacts
+            if (contactsRes.ok) {
+                const contactsData = await contactsRes.json();
+                setContacts(contactsData);
+            }
+
+            // Get bank accounts
+            setBankAccounts(bankAccountsRes.data);
         } catch (error) {
             console.error('Error fetching data:', error);
             toast.error('Failed to load expenses');
@@ -147,12 +164,12 @@ export default function GroupExpensesPage() {
                 const perPerson = amount / totalPeople;
                 totalFriendsShare = perPerson * selectedFriends.length;
                 splitBetween = selectedFriends.map((friendId) => {
-                    const friend = friends.find((f) => f._id === friendId);
+                    const contact = contacts.find((c) => c._id === friendId);
                     return {
-                        userId: friend?.userId,
+                        userId: friendId,
                         _id: friendId,
-                        name: friend?.name || '',
-                        email: friend?.email || '',
+                        name: contact?.name || '',
+                        email: contact?.email || '',
                         amountOwed: parseFloat(perPerson.toFixed(2)),
                         status: 'pending' as const,
                     };
@@ -165,17 +182,17 @@ export default function GroupExpensesPage() {
                 }, 0);
 
                 if (totalFriendsShare > amount) {
-                    toast.error(`Friends' share (₹${totalFriendsShare.toFixed(2)}) cannot exceed total amount (₹${amount})`);
+                    toast.error(`Friends' share (PKR ${totalFriendsShare.toFixed(2)}) cannot exceed total amount (PKR ${amount})`);
                     return;
                 }
 
                 splitBetween = selectedFriends.map((friendId) => {
-                    const friend = friends.find((f) => f._id === friendId);
+                    const contact = contacts.find((c) => c._id === friendId);
                     return {
-                        userId: friend?.userId,
+                        userId: friendId,
                         _id: friendId,
-                        name: friend?.name || '',
-                        email: friend?.email || '',
+                        name: contact?.name || '',
+                        email: contact?.email || '',
                         amountOwed: parseFloat(customSplits[friendId] || '0'),
                         status: 'pending' as const,
                     };
@@ -190,6 +207,9 @@ export default function GroupExpensesPage() {
                 isGroupExpense: true,
                 splitBetween,
                 notes,
+                bankAccountId: selectedBankAccount || undefined,
+                reminderEnabled,
+                reminderInterval: reminderEnabled ? reminderInterval : undefined,
             };
 
             await transactionApi.addTransaction(expenseData);
@@ -203,6 +223,9 @@ export default function GroupExpensesPage() {
             setSplitType('equal');
             setSelectedFriends([]);
             setCustomSplits({});
+            setSelectedBankAccount('');
+            setReminderEnabled(false);
+            setReminderInterval(24);
 
             fetchData();
         } catch (error) {
@@ -451,6 +474,27 @@ export default function GroupExpensesPage() {
                                         />
                                     </div>
 
+                                    {/* Bank Account Selection */}
+                                    <div>
+                                        <Label htmlFor="bankAccount">Pay From Bank Account (Optional)</Label>
+                                        <select
+                                            id="bankAccount"
+                                            value={selectedBankAccount}
+                                            onChange={(e) => setSelectedBankAccount(e.target.value)}
+                                            className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                                        >
+                                            <option value="">Select account (optional)</option>
+                                            {bankAccounts.map((account) => (
+                                                <option key={account._id} value={account._id}>
+                                                    {account.accountName} - {account.bankName} (Balance: PKR {account.balance.toLocaleString()})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-xs text-zinc-500 mt-1">
+                                            Amount will be deducted from selected account and returned when friends pay
+                                        </p>
+                                    </div>
+
                                     {/* Split Type */}
                                     <div>
                                         <Label>Split Type *</Label>
@@ -477,35 +521,35 @@ export default function GroupExpensesPage() {
                                     {/* Select Friends */}
                                     <div>
                                         <Label>Select Friends to Split With *</Label>
-                                        {friends.length === 0 ? (
+                                        {contacts.length === 0 ? (
                                             <p className="text-sm text-zinc-500 mt-2">
-                                                No friends added yet. Add friends in Settings first.
+                                                No contacts added yet. Add contacts in Friends page first.
                                             </p>
                                         ) : (
                                             <div className="mt-2 max-h-60 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
                                                 <div className="space-y-3">
-                                                    {friends.map((friend) => {
-                                                        const isSelected = selectedFriends.includes(friend._id);
+                                                    {contacts.map((contact) => {
+                                                        const isSelected = selectedFriends.includes(contact._id);
                                                         const perPersonAmount = totalAmount && selectedFriends.length > 0
                                                             ? (parseFloat(totalAmount) / selectedFriends.length).toFixed(2)
                                                             : '0.00';
 
                                                         return (
-                                                            <div key={friend._id} className="space-y-2">
+                                                            <div key={contact._id} className="space-y-2">
                                                                 <label className="flex items-center gap-2 cursor-pointer">
                                                                     <input
                                                                         type="checkbox"
                                                                         checked={isSelected}
-                                                                        onChange={() => toggleFriend(friend._id)}
+                                                                        onChange={() => toggleFriend(contact._id)}
                                                                         className="h-4 w-4 rounded border-zinc-300"
                                                                     />
                                                                     <div className="flex-1">
-                                                                        <span className="text-sm font-medium">{friend.name}</span>
-                                                                        <span className="text-xs text-zinc-500 ml-2">({friend.email})</span>
+                                                                        <span className="text-sm font-medium">{contact.name}</span>
+                                                                        <span className="text-xs text-zinc-500 ml-2">({contact.email})</span>
                                                                     </div>
                                                                     {isSelected && splitType === 'equal' && (
                                                                         <span className="text-sm font-medium text-blue-600">
-                                                                            ₹{perPersonAmount}
+                                                                            PKR {perPersonAmount}
                                                                         </span>
                                                                     )}
                                                                 </label>
@@ -515,8 +559,8 @@ export default function GroupExpensesPage() {
                                                                     <div className="ml-6">
                                                                         <Input
                                                                             type="number"
-                                                                            value={customSplits[friend._id] || ''}
-                                                                            onChange={(e) => handleCustomSplitChange(friend._id, e.target.value)}
+                                                                            value={customSplits[contact._id] || ''}
+                                                                            onChange={(e) => handleCustomSplitChange(contact._id, e.target.value)}
                                                                             placeholder="Amount for this person"
                                                                             className="text-sm"
                                                                         />
@@ -526,6 +570,56 @@ export default function GroupExpensesPage() {
                                                         );
                                                     })}
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {/* Reminder Settings */}
+                                        {selectedFriends.length > 0 && (
+                                            <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-md border border-zinc-200 dark:border-zinc-800">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="reminderEnabled"
+                                                        checked={reminderEnabled}
+                                                        onChange={(e) => setReminderEnabled(e.target.checked)}
+                                                        className="h-4 w-4 rounded border-zinc-300"
+                                                    />
+                                                    <Label htmlFor="reminderEnabled" className="cursor-pointer">
+                                                        Send payment reminders
+                                                    </Label>
+                                                </div>
+
+                                                {reminderEnabled && (
+                                                    <div>
+                                                        <Label htmlFor="reminderInterval" className="text-sm mb-2 block">
+                                                            Reminder Interval (hours)
+                                                        </Label>
+                                                        <Input
+                                                            id="reminderInterval"
+                                                            type="number"
+                                                            min="1"
+                                                            value={reminderInterval}
+                                                            onChange={(e) => setReminderInterval(Number(e.target.value))}
+                                                            placeholder="24"
+                                                            className="w-full"
+                                                        />
+                                                        <p className="text-xs text-zinc-500 mt-1">
+                                                            {reminderInterval} hours = {(reminderInterval / 24).toFixed(1)} days
+                                                        </p>
+                                                        <div className="flex gap-2 mt-2 flex-wrap">
+                                                            {[12, 24, 48, 72, 168].map((hours) => (
+                                                                <button
+                                                                    key={hours}
+                                                                    type="button"
+                                                                    onClick={() => setReminderInterval(hours)}
+                                                                    className="px-2 py-1 text-xs rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                                                >
+                                                                    {hours}h
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -584,6 +678,8 @@ export default function GroupExpensesPage() {
                                                 setSplitType('equal');
                                                 setSelectedFriends([]);
                                                 setCustomSplits({});
+                                                setReminderEnabled(false);
+                                                setReminderInterval(24);
                                             }}
                                             variant="outline"
                                             className="flex-1"

@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { groupApi, userApi, transactionApi } from '@/lib/api';
+import { groupApi, friendApi, transactionApi } from '@/lib/api';
 
 interface Friend {
     _id: string;
@@ -50,9 +50,17 @@ export default function AddGroupExpenseModal({ onClose, onSuccess }: AddGroupExp
 
     const fetchData = async () => {
         try {
-            const [groupsRes, friendsRes] = await Promise.all([groupApi.getAllGroups(), userApi.getFriends()]);
+            const [groupsRes, friendsRes] = await Promise.all([groupApi.getAllGroups(), friendApi.getAll()]);
             setGroups(groupsRes.data);
-            setFriends(friendsRes.data);
+            // Extract accepted friends from the response
+            const acceptedFriends = friendsRes.data
+                .filter((f: { status: string }) => f.status === 'accepted')
+                .map((f: { friend: { _id: string; name: string; email: string } }) => ({
+                    _id: f.friend._id,
+                    name: f.friend.name,
+                    email: f.friend.email
+                }));
+            setFriends(acceptedFriends);
         } catch (err) {
             console.error('Error fetching data:', err);
         }

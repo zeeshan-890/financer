@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { userApi } from '@/lib/api';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -47,32 +47,22 @@ export default function SettingsPage() {
 
     const fetchProfile = async () => {
         try {
+            setLoading(true);
             if (!user?.id) return;
             const res = await userApi.getUser(user.id);
             const profile = res.data;
             setName(profile.name || '');
-            setCurrency(profile.currency || 'INR');
+            setCurrency(profile.currency || 'PKR');
             setMonthlyBudget(profile.monthlyBudget?.toString() || '');
             setIncome(profile.income?.toString() || '');
+            setHideBalanceByDefault(profile.hideBalanceByDefault || false);
+            setHasBalancePin(profile.hasBalancePin || false);
         } catch (error) {
             console.error('Error fetching profile:', error);
-            // Fallback to authStore user data if fetch fails
             if (user) {
                 setName(user.name || '');
-                setCurrency(user.currency || 'INR');
-                setMonthlyBudget(user.monthlyBudget?.toString() || '');
-                setIncome(user.income?.toString() || '');
+                setCurrency('PKR');
             }
-        }
-    };
-
-    const fetchFriends = async () => {
-        try {
-            setLoading(true);
-            const res = await userApi.getFriends();
-            setFriends(res.data);
-        } catch (error) {
-            console.error('Error fetching friends:', error);
         } finally {
             setLoading(false);
         }
@@ -86,6 +76,7 @@ export default function SettingsPage() {
                 currency,
                 monthlyBudget: monthlyBudget ? parseFloat(monthlyBudget) : undefined,
                 income: income ? parseFloat(income) : undefined,
+                hideBalanceByDefault
             });
             toast.success('Profile updated successfully!');
         } catch (error) {
@@ -96,59 +87,60 @@ export default function SettingsPage() {
         }
     };
 
-    const handleAddFriend = async () => {
-        try {
-            const friendData: {
-                email: string;
-                name: string;
-                phone?: string;
-                university?: string;
-                batch?: string;
-                hostel?: string;
-                address?: string;
-                notes?: string;
-            } = {
-                email: friendEmail,
-                name: friendName,
-            };
-
-            // Add optional fields if provided
-            if (friendPhone) friendData.phone = friendPhone;
-            if (friendUniversity) friendData.university = friendUniversity;
-            if (friendBatch) friendData.batch = friendBatch;
-            if (friendHostel) friendData.hostel = friendHostel;
-            if (friendAddress) friendData.address = friendAddress;
-            if (friendNotes) friendData.notes = friendNotes;
-
-            await userApi.addFriend(friendData);
-            toast.success('Friend added successfully!');
-
-            // Reset form
-            setShowAddFriend(false);
-            setFriendName('');
-            setFriendEmail('');
-            setFriendPhone('');
-            setFriendUniversity('');
-            setFriendBatch('');
-            setFriendHostel('');
-            setFriendAddress('');
-            setFriendNotes('');
-
-            fetchFriends();
-        } catch (error: unknown) {
-            console.error('Error adding friend:', error);
-            toast.error('Failed to add friend. They may already be in your friends list.');
+    const handleSetPin = async () => {
+        if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+            toast.error('PIN must be a 4-digit number');
+            return;
         }
-    }; const handleRemoveFriend = async (friendId: string) => {
-        if (!confirm('Are you sure you want to remove this friend?')) return;
+
+        if (newPin !== confirmPin) {
+            toast.error('PINs do not match');
+            return;
+        }
+
+        if (hasBalancePin && !currentPin) {
+            toast.error('Please enter your current PIN');
+            return;
+        }
 
         try {
-            await userApi.removeFriend(friendId);
-            toast.success('Friend removed successfully!');
-            fetchFriends();
-        } catch (error) {
-            console.error('Error removing friend:', error);
-            toast.error('Failed to remove friend');
+            await userApi.setBalancePin({
+                pin: newPin,
+                currentPin: hasBalancePin ? currentPin : undefined
+            });
+            toast.success('PIN set successfully!');
+            setShowPinSection(false);
+            setCurrentPin('');
+            setNewPin('');
+            setConfirmPin('');
+            setHasBalancePin(true);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error && 'response' in error
+                ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+                : 'Failed to set PIN';
+            toast.error(errorMessage || 'Failed to set PIN');
+        }
+    };
+
+    const handleRemovePin = async () => {
+        if (!confirm('Are you sure you want to remove your balance PIN?')) return;
+
+        if (!currentPin) {
+            toast.error('Please enter your current PIN');
+            return;
+        }
+
+        try {
+            await userApi.removeBalancePin({ currentPin });
+            toast.success('PIN removed successfully!');
+            setHasBalancePin(false);
+            setCurrentPin('');
+            setShowPinSection(false);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error && 'response' in error
+                ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+                : 'Failed to remove PIN';
+            toast.error(errorMessage || 'Failed to remove PIN');
         }
     };
 
@@ -188,7 +180,7 @@ export default function SettingsPage() {
                                 <Input id="email" type="email" value={user?.email} disabled />
                             </div>
                             <div>
-                                <Label htmlFor="income">Monthly Income (₹)</Label>
+                                <Label htmlFor="income">Monthly Income (PKR)</Label>
                                 <Input
                                     id="income"
                                     type="number"
@@ -218,13 +210,15 @@ export default function SettingsPage() {
                                     onChange={(e) => setCurrency(e.target.value)}
                                     className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
                                 >
-                                    <option value="INR">INR (₹)</option>
+                                    <option value="PKR">PKR (Rs)</option>
                                     <option value="USD">USD ($)</option>
                                     <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="INR">INR (₹)</option>
                                 </select>
                             </div>
                             <div>
-                                <Label htmlFor="budget">Monthly Budget Limit (₹)</Label>
+                                <Label htmlFor="budget">Monthly Budget Limit (PKR)</Label>
                                 <Input
                                     id="budget"
                                     type="number"
@@ -239,192 +233,127 @@ export default function SettingsPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Friends Management */}
+                    {/* Balance Privacy Settings */}
                     <Card>
                         <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle>Friends</CardTitle>
-                                    <CardDescription>Manage your friends for easy bill splitting</CardDescription>
-                                </div>
-                                <Button onClick={() => setShowAddFriend(!showAddFriend)} variant="outline" size="sm">
-                                    <UserPlus className="mr-2 h-4 w-4" />
-                                    Add Friend
-                                </Button>
-                            </div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Lock className="w-5 h-5" />
+                                Balance Privacy
+                            </CardTitle>
+                            <CardDescription>Protect your balance information with a PIN</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            {/* Add Friend Section */}
-                            {showAddFriend && (
-                                <div className="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-                                    <div className="space-y-3">
-                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">Add friend details</p>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="hideBalance"
+                                    checked={hideBalanceByDefault}
+                                    onChange={(e) => setHideBalanceByDefault(e.target.checked)}
+                                    className="w-4 h-4"
+                                />
+                                <Label htmlFor="hideBalance" className="cursor-pointer">
+                                    Hide balance by default (requires PIN to view)
+                                </Label>
+                            </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div>
-                                                <Label htmlFor="friendName">Name *</Label>
-                                                <Input
-                                                    id="friendName"
-                                                    placeholder="John Doe"
-                                                    value={friendName}
-                                                    onChange={(e) => setFriendName(e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="friendEmail">Email *</Label>
-                                                <Input
-                                                    id="friendEmail"
-                                                    type="email"
-                                                    placeholder="john@example.com"
-                                                    value={friendEmail}
-                                                    onChange={(e) => setFriendEmail(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div>
-                                                <Label htmlFor="friendPhone">Phone</Label>
-                                                <Input
-                                                    id="friendPhone"
-                                                    placeholder="+91 9876543210"
-                                                    value={friendPhone}
-                                                    onChange={(e) => setFriendPhone(e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="friendUniversity">University</Label>
-                                                <Input
-                                                    id="friendUniversity"
-                                                    placeholder="e.g., IIT Delhi"
-                                                    value={friendUniversity}
-                                                    onChange={(e) => setFriendUniversity(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div>
-                                                <Label htmlFor="friendBatch">Batch/Year</Label>
-                                                <Input
-                                                    id="friendBatch"
-                                                    placeholder="e.g., 2023"
-                                                    value={friendBatch}
-                                                    onChange={(e) => setFriendBatch(e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="friendHostel">Hostel/Room</Label>
-                                                <Input
-                                                    id="friendHostel"
-                                                    placeholder="e.g., Hostel 5, Room 201"
-                                                    value={friendHostel}
-                                                    onChange={(e) => setFriendHostel(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <Label htmlFor="friendAddress">Address</Label>
-                                            <Input
-                                                id="friendAddress"
-                                                placeholder="Full address"
-                                                value={friendAddress}
-                                                onChange={(e) => setFriendAddress(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Label htmlFor="friendNotes">Notes</Label>
-                                            <textarea
-                                                id="friendNotes"
-                                                placeholder="Any additional notes..."
-                                                value={friendNotes}
-                                                onChange={(e) => setFriendNotes(e.target.value)}
-                                                className="flex min-h-[60px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-                                            />
-                                        </div>
-
-                                        <Button
-                                            onClick={() => handleAddFriend()}
-                                            className="w-full"
-                                            disabled={!friendName || !friendEmail}
-                                        >
-                                            Add Friend
-                                        </Button>
+                            <div className="pt-4 border-t">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <p className="font-medium">Balance PIN</p>
+                                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                            {hasBalancePin ? 'PIN is set' : 'No PIN set'}
+                                        </p>
                                     </div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowPinSection(!showPinSection)}
+                                    >
+                                        <Lock className="w-4 h-4 mr-2" />
+                                        {hasBalancePin ? 'Change PIN' : 'Set PIN'}
+                                    </Button>
                                 </div>
-                            )}
 
-                            {/* Friends List */}
-                            <div className="space-y-3">
-                                {friends.length > 0 ? (
-                                    friends.map((friend) => (
-                                        <Card key={friend._id} className="border border-zinc-200 dark:border-zinc-800">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-                                                                {friend.name}
-                                                            </h3>
-                                                            {friend.userId && (
-                                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                                                                    Registered User
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="space-y-1 text-sm">
-                                                            <p className="text-zinc-600 dark:text-zinc-400">
-                                                                📧 {friend.email}
-                                                            </p>
-                                                            {friend.phone && (
-                                                                <p className="text-zinc-600 dark:text-zinc-400">
-                                                                    📱 {friend.phone}
-                                                                </p>
-                                                            )}
-                                                            {friend.university && (
-                                                                <p className="text-zinc-600 dark:text-zinc-400">
-                                                                    🎓 {friend.university}
-                                                                    {friend.batch && ` - ${friend.batch}`}
-                                                                </p>
-                                                            )}
-                                                            {friend.hostel && (
-                                                                <p className="text-zinc-600 dark:text-zinc-400">
-                                                                    🏠 {friend.hostel}
-                                                                </p>
-                                                            )}
-                                                            {friend.address && (
-                                                                <p className="text-zinc-600 dark:text-zinc-400">
-                                                                    📍 {friend.address}
-                                                                </p>
-                                                            )}
-                                                            {friend.notes && (
-                                                                <p className="text-zinc-500 dark:text-zinc-500 italic mt-2">
-                                                                    Note: {friend.notes}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        onClick={() => handleRemoveFriend(friend._id)}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-600 hover:text-red-700 ml-4"
+                                {showPinSection && (
+                                    <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                                        {hasBalancePin && (
+                                            <div>
+                                                <Label htmlFor="currentPin">Current PIN</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="currentPin"
+                                                        type={showCurrentPin ? 'text' : 'password'}
+                                                        value={currentPin}
+                                                        onChange={(e) => setCurrentPin(e.target.value)}
+                                                        placeholder="Enter current PIN"
+                                                        maxLength={4}
+                                                        className="pr-10"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowCurrentPin(!showCurrentPin)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                        {showCurrentPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))
-                                ) : (
-                                    <p className="py-8 text-center text-zinc-500">
-                                        No friends added yet. Click &ldquo;Add Friend&rdquo; to get started!
-                                    </p>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <Label htmlFor="newPin">New PIN (4 digits)</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="newPin"
+                                                    type={showNewPin ? 'text' : 'password'}
+                                                    value={newPin}
+                                                    onChange={(e) => setNewPin(e.target.value)}
+                                                    placeholder="Enter new PIN"
+                                                    maxLength={4}
+                                                    className="pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNewPin(!showNewPin)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                                                >
+                                                    {showNewPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="confirmPin">Confirm PIN</Label>
+                                            <Input
+                                                id="confirmPin"
+                                                type="password"
+                                                value={confirmPin}
+                                                onChange={(e) => setConfirmPin(e.target.value)}
+                                                placeholder="Confirm new PIN"
+                                                maxLength={4}
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-2 pt-2">
+                                            <Button onClick={handleSetPin} className="flex-1">
+                                                {hasBalancePin ? 'Update PIN' : 'Set PIN'}
+                                            </Button>
+                                            {hasBalancePin && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handleRemovePin}
+                                                    className="border-red-500 text-red-500 hover:bg-red-50"
+                                                >
+                                                    Remove PIN
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
+
+                            <Button onClick={handleSaveProfile} disabled={saving}>
+                                {saving ? 'Saving...' : 'Save Privacy Settings'}
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Receipt, Plus, Check, X } from 'lucide-react';
-import { transactionApi, userApi } from '@/lib/api';
+import { transactionApi, friendApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 interface Friend {
@@ -70,7 +70,7 @@ export default function GroupExpensesPage() {
             setLoading(true);
             const [transactionsRes, friendsRes] = await Promise.all([
                 transactionApi.getAllTransactions(),
-                userApi.getFriends(),
+                friendApi.getAll(),
             ]);
 
             // Filter only group expenses
@@ -79,7 +79,16 @@ export default function GroupExpensesPage() {
                 return expense.isGroupExpense && expense.splitBetween && expense.splitBetween.length > 0;
             });
             setExpenses(groupExpenses as GroupExpense[]);
-            setFriends(friendsRes.data);
+
+            // Extract friend data from the response
+            const acceptedFriends = friendsRes.data
+                .filter((f: { status: string }) => f.status === 'accepted')
+                .map((f: { friend: { _id: string; name: string; email: string } }) => ({
+                    _id: f.friend._id,
+                    name: f.friend.name,
+                    email: f.friend.email
+                }));
+            setFriends(acceptedFriends);
         } catch (error) {
             console.error('Error fetching data:', error);
             toast.error('Failed to load expenses');

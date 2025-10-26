@@ -149,16 +149,16 @@ export default function FriendsPage() {
                             <UserPlus className="w-5 h-5" />
                             Add Friend
                         </div>
-                        <Button 
-                            size="sm" 
-                            variant="outline" 
+                        <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => setShowManualAdd(!showManualAdd)}
                         >
                             <Plus className="w-4 h-4 mr-1" />
                             {showManualAdd ? 'Send Request' : 'Add Manually'}
                         </Button>
                     </h2>
-                    
+
                     {!showManualAdd ? (
                         <form onSubmit={handleSendRequest} className="flex gap-2">
                             <div className="relative flex-1">

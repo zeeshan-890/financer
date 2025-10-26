@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { transactionApi } from '@/lib/api';
-import { Plus, TrendingUp, TrendingDown, Eye, EyeOff } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import AddTransactionModal from '@/components/AddTransactionModal';
 
 interface Transaction {
@@ -40,6 +40,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [balanceVisible, setBalanceVisible] = useState(false);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
     useEffect(() => {
         if (!isHydrated) return; // Wait for store to hydrate
@@ -85,8 +86,60 @@ export default function DashboardPage() {
     // Get max expense for heatmap coloring
     const maxExpense = stats ? Math.max(...stats.heatmapData.map(d => d.amount), 0) : 0;
 
-    // Get current week heatmap (last 7 days)
-    const currentWeekData = stats ? stats.heatmapData.slice(-7) : [];
+    // Generate calendar for current month
+    const generateMonthCalendar = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        // Get first day of month and number of days
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+
+        // Get expense data for this month
+        const monthExpenses = stats?.heatmapData.filter(d => {
+            const expenseDate = new Date(d.date);
+            return expenseDate.getMonth() === month && expenseDate.getFullYear() === year;
+        }) || [];
+
+        // Create expense map for quick lookup
+        const expenseMap = new Map(monthExpenses.map(e => [e.date, e.amount]));
+
+        // Generate calendar days
+        const calendar = [];
+
+        // Add empty cells for days before month starts
+        for (let i = 0; i < startDayOfWeek; i++) {
+            calendar.push(null);
+        }
+
+        // Add all days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const amount = expenseMap.get(dateStr) || 0;
+            calendar.push({ day, date: dateStr, amount });
+        }
+
+        return calendar;
+    };
+
+    const monthCalendar = generateMonthCalendar();
+
+    const goToPreviousMonth = () => {
+        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    };
+
+    const goToNextMonth = () => {
+        setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    };
+
+    const goToCurrentMonth = () => {
+        setCurrentMonth(new Date());
+    };
+
+    const isCurrentMonth = currentMonth.getMonth() === new Date().getMonth() &&
+        currentMonth.getFullYear() === new Date().getFullYear();
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
@@ -265,13 +318,61 @@ export default function DashboardPage() {
                 {/* Expense Heatmap Calendar */}
                 <Card className="mb-6">
                     <CardHeader>
-                        <CardTitle className="text-lg sm:text-xl">Expense Calendar (Last 7 Days)</CardTitle>
-                        <CardDescription>Color intensity shows spending amount</CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg sm:text-xl">Expense Calendar</CardTitle>
+                                <CardDescription>
+                                    {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={goToPreviousMonth}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                {!isCurrentMonth && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={goToCurrentMonth}
+                                        className="h-8 px-3"
+                                    >
+                                        Today
+                                    </Button>
+                                )}
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={goToNextMonth}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
+                        {/* Day labels */}
+                        <div className="grid grid-cols-7 gap-2 mb-2">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                <div key={day} className="text-center text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                                    {day}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Calendar grid */}
                         <div className="grid grid-cols-7 gap-2">
-                            {currentWeekData.map((day, index) => {
-                                const intensity = maxExpense > 0 ? (day.amount / maxExpense) : 0;
+                            {monthCalendar.map((dayData, index) => {
+                                if (!dayData) {
+                                    return <div key={`empty-${index}`} className="aspect-square" />;
+                                }
+
+                                const intensity = maxExpense > 0 ? (dayData.amount / maxExpense) : 0;
                                 const bgColor = intensity === 0
                                     ? 'bg-zinc-100 dark:bg-zinc-800'
                                     : intensity < 0.25
@@ -282,26 +383,34 @@ export default function DashboardPage() {
                                                 ? 'bg-orange-300 dark:bg-orange-900'
                                                 : 'bg-red-400 dark:bg-red-900';
 
-                                const date = new Date(day.date);
-                                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                                const dayNum = date.getDate();
+                                const today = new Date().toISOString().split('T')[0];
+                                const isToday = dayData.date === today;
 
                                 return (
-                                    <div key={index} className="flex flex-col items-center">
-                                        <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">{dayName}</div>
-                                        <div
-                                            className={`w-full aspect-square rounded-lg ${bgColor} flex flex-col items-center justify-center border border-zinc-300 dark:border-zinc-700 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all`}
-                                            title={`${day.date}: PKR ${day.amount.toLocaleString()}`}
-                                        >
-                                            <div className="text-sm font-semibold">{dayNum}</div>
-                                            {day.amount > 0 && (
-                                                <div className="text-xs mt-1">PKR {day.amount.toFixed(0)}</div>
-                                            )}
+                                    <div
+                                        key={index}
+                                        className={`aspect-square rounded-lg ${bgColor} flex flex-col items-center justify-center border ${isToday
+                                                ? 'border-blue-500 border-2 ring-2 ring-blue-200 dark:ring-blue-800'
+                                                : 'border-zinc-300 dark:border-zinc-700'
+                                            } cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all`}
+                                        title={`${dayData.date}: PKR ${dayData.amount.toLocaleString()}`}
+                                    >
+                                        <div className={`text-xs sm:text-sm font-semibold ${isToday ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                                            {dayData.day}
                                         </div>
+                                        {dayData.amount > 0 && (
+                                            <div className="text-[10px] sm:text-xs mt-0.5 text-center px-1">
+                                                {dayData.amount >= 1000
+                                                    ? `${(dayData.amount / 1000).toFixed(1)}k`
+                                                    : dayData.amount.toFixed(0)}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
+
+                        {/* Legend */}
                         <div className="mt-4 flex items-center justify-center gap-4 text-xs text-zinc-600 dark:text-zinc-400">
                             <div className="flex items-center gap-1">
                                 <div className="w-4 h-4 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded"></div>

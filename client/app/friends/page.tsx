@@ -1,345 +1,392 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { friendApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { UserPlus, UserCheck, UserX, Search, Mail, Check, X, Clock, Plus } from 'lucide-react';
+import { UserPlus, Trash2, Edit2, Phone, Mail, Users, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-interface Friend {
+interface Contact {
     _id: string;
-    friend: {
-        _id: string;
-        name: string;
-        email: string;
-        profileImage?: string;
-    };
-    status: 'pending' | 'accepted' | 'blocked';
-    isSentByMe: boolean;
-    requestedAt: string;
-    acceptedAt?: string;
+    name: string;
+    email: string;
+    phone?: string;
+    type: 'hostel' | 'class' | 'neighbour' | 'family' | 'work' | 'other';
+    notes?: string;
+    createdAt: string;
 }
 
+const contactTypes = [
+    { value: 'hostel', label: 'Hostel', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+    { value: 'class', label: 'Class', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+    { value: 'neighbour', label: 'Neighbour', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
+    { value: 'family', label: 'Family', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
+    { value: 'work', label: 'Work', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+    { value: 'other', label: 'Other', color: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' }
+];
+
 export default function FriendsPage() {
-    const [friends, setFriends] = useState<Friend[]>([]);
-    const [email, setEmail] = useState('');
+    const { isAuthenticated, isHydrated } = useAuthStore();
+    const router = useRouter();
+    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingContact, setEditingContact] = useState<Contact | null>(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        type: 'other' as Contact['type'],
+        notes: ''
+    });
     const [searchQuery, setSearchQuery] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [showManualAdd, setShowManualAdd] = useState(false);
-    const [manualFriend, setManualFriend] = useState({ name: '', email: '' });
 
     useEffect(() => {
-        fetchFriends();
-    }, []);
-
-    const fetchFriends = async () => {
-        try {
-            const response = await friendApi.getAll();
-            setFriends(response.data);
-        } catch (error: any) {
-            console.error('Error fetching friends:', error);
+        if (!isHydrated) return;
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
         }
-    };
+        fetchContacts();
+    }, [isAuthenticated, isHydrated, router]);
 
-    const handleSendRequest = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email.trim()) return;
-
-        setLoading(true);
-        setError('');
-        setSuccess('');
-
+    const fetchContacts = async () => {
         try {
-            await friendApi.sendRequest({ email: email.trim() });
-            setSuccess('Friend request sent successfully!');
-            setEmail('');
-            fetchFriends();
-        } catch (error: any) {
-            setError(error.response?.data?.message || 'Failed to send friend request');
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/contacts', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setContacts(data);
+            }
+        } catch (error) {
+            console.error('Error fetching contacts:', error);
+            toast.error('Failed to load contacts');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleAcceptRequest = async (id: string) => {
-        try {
-            await friendApi.acceptRequest(id);
-            setSuccess('Friend request accepted!');
-            fetchFriends();
-        } catch (error: any) {
-            setError(error.response?.data?.message || 'Failed to accept request');
-        }
-    };
-
-    const handleRemoveFriend = async (id: string) => {
-        if (!confirm('Are you sure you want to remove this friend?')) return;
-
-        try {
-            await friendApi.remove(id);
-            setSuccess('Friend removed successfully');
-            fetchFriends();
-        } catch (error: any) {
-            setError(error.response?.data?.message || 'Failed to remove friend');
-        }
-    };
-
-    const handleManualAdd = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!manualFriend.name.trim() || !manualFriend.email.trim()) return;
-
-        setLoading(true);
-        setError('');
-        setSuccess('');
+        
+        if (!formData.name || !formData.email) {
+            toast.error('Name and email are required');
+            return;
+        }
 
         try {
-            await friendApi.addManual(manualFriend);
-            setSuccess('Friend added successfully!');
-            setManualFriend({ name: '', email: '' });
-            setShowManualAdd(false);
-            fetchFriends();
-        } catch (error: any) {
-            setError(error.response?.data?.message || 'Failed to add friend');
-        } finally {
-            setLoading(false);
+            const token = localStorage.getItem('token');
+            const url = editingContact ? `/api/contacts/${editingContact._id}` : '/api/contacts';
+            const method = editingContact ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                toast.success(editingContact ? 'Contact updated!' : 'Contact added!');
+                setShowAddModal(false);
+                setEditingContact(null);
+                setFormData({ name: '', email: '', phone: '', type: 'other', notes: '' });
+                fetchContacts();
+            } else {
+                const data = await response.json();
+                toast.error(data.message || 'Failed to save contact');
+            }
+        } catch (error) {
+            console.error('Error saving contact:', error);
+            toast.error('Failed to save contact');
         }
     };
 
-    const filteredFriends = friends.filter(f =>
-        f.friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        f.friend.email.toLowerCase().includes(searchQuery.toLowerCase())
+    const handleEdit = (contact: Contact) => {
+        setEditingContact(contact);
+        setFormData({
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone || '',
+            type: contact.type,
+            notes: contact.notes || ''
+        });
+        setShowAddModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Delete this contact?')) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/contacts/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success('Contact deleted');
+                fetchContacts();
+            } else {
+                toast.error('Failed to delete contact');
+            }
+        } catch (error) {
+            console.error('Error deleting contact:', error);
+            toast.error('Failed to delete contact');
+        }
+    };
+
+    const filteredContacts = contacts.filter(c =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.type.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const pendingRequests = filteredFriends.filter(f => f.status === 'pending');
-    const acceptedFriends = filteredFriends.filter(f => f.status === 'accepted');
+    const groupedContacts = contactTypes.map(type => ({
+        ...type,
+        contacts: filteredContacts.filter(c => c.type === type.value)
+    }));
 
-    const sentRequests = pendingRequests.filter(f => f.isSentByMe);
-    const receivedRequests = pendingRequests.filter(f => !f.isSentByMe);
+    if (!isHydrated || !isAuthenticated) return null;
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+                <p className="text-zinc-600 dark:text-zinc-400">Loading contacts...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
+            <div className="mx-auto max-w-7xl">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Friends</h1>
-                        <p className="text-gray-400 mt-1">Manage your friends and friend requests</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Friends & Contacts</h1>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                            Manage your contacts - {contacts.length} total
+                        </p>
                     </div>
+                    <Button onClick={() => {
+                        setEditingContact(null);
+                        setFormData({ name: '', email: '', phone: '', type: 'other', notes: '' });
+                        setShowAddModal(true);
+                    }}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Add Contact
+                    </Button>
                 </div>
 
-                {/* Error/Success Messages */}
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                        {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                        {success}
-                    </div>
-                )}
-
-                {/* Add Friend */}
-                <Card className="p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <UserPlus className="w-5 h-5" />
-                            Add Friend
-                        </div>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowManualAdd(!showManualAdd)}
-                        >
-                            <Plus className="w-4 h-4 mr-1" />
-                            {showManualAdd ? 'Send Request' : 'Add Manually'}
-                        </Button>
-                    </h2>
-
-                    {!showManualAdd ? (
-                        <form onSubmit={handleSendRequest} className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                <Input
-                                    type="email"
-                                    placeholder="Enter friend's email address"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="pl-10"
-                                    required
-                                />
-                            </div>
-                            <Button type="submit" disabled={loading}>
-                                {loading ? 'Sending...' : 'Send Request'}
-                            </Button>
-                        </form>
-                    ) : (
-                        <form onSubmit={handleManualAdd} className="space-y-4">
-                            <div>
-                                <Label>Friend's Name</Label>
-                                <Input
-                                    type="text"
-                                    placeholder="Enter name"
-                                    value={manualFriend.name}
-                                    onChange={(e) => setManualFriend({ ...manualFriend, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <Label>Friend's Email</Label>
-                                <Input
-                                    type="email"
-                                    placeholder="Enter email"
-                                    value={manualFriend.email}
-                                    onChange={(e) => setManualFriend({ ...manualFriend, email: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <Button type="submit" disabled={loading} className="w-full">
-                                {loading ? 'Adding...' : 'Add Friend'}
-                            </Button>
-                        </form>
-                    )}
-                </Card>
-
                 {/* Search */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="mb-6">
                     <Input
                         type="text"
-                        placeholder="Search friends..."
+                        placeholder="Search by name, email, or type..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
+                        className="max-w-md"
                     />
                 </div>
 
-                {/* Received Friend Requests */}
-                {receivedRequests.length > 0 && (
-                    <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <Clock className="w-5 h-5" />
-                            Friend Requests ({receivedRequests.length})
-                        </h2>
-                        <div className="space-y-3">
-                            {receivedRequests.map((request) => (
-                                <div
-                                    key={request._id}
-                                    className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                            {request.friend.name.charAt(0).toUpperCase()}
+                {/* Contacts by Type */}
+                {groupedContacts.map(group => (
+                    group.contacts.length > 0 && (
+                        <Card key={group.value} className="mb-6">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    {group.label}
+                                    <span className="text-sm font-normal text-zinc-500">({group.contacts.length})</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {group.contacts.map(contact => (
+                                        <div key={contact._id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">{contact.name}</h3>
+                                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${group.color}`}>
+                                                        {group.label}
+                                                    </span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handleEdit(contact)}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Edit2 className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handleDelete(contact._id)}
+                                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                                <div className="flex items-center gap-2">
+                                                    <Mail className="h-3 w-3" />
+                                                    <span className="truncate">{contact.email}</span>
+                                                </div>
+                                                {contact.phone && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone className="h-3 w-3" />
+                                                        <span>{contact.phone}</span>
+                                                    </div>
+                                                )}
+                                                {contact.notes && (
+                                                    <p className="text-xs mt-2 text-zinc-500 dark:text-zinc-500 italic">
+                                                        {contact.notes}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{request.friend.name}</p>
-                                            <p className="text-sm text-gray-600">{request.friend.email}</p>
-                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )
+                ))}
+
+                {filteredContacts.length === 0 && (
+                    <Card>
+                        <CardContent className="py-20 text-center">
+                            <Users className="h-12 w-12 mx-auto text-zinc-400 mb-4" />
+                            <p className="text-zinc-500 dark:text-zinc-400 mb-4">
+                                {searchQuery ? 'No contacts found' : 'No contacts yet'}
+                            </p>
+                            {!searchQuery && (
+                                <Button onClick={() => setShowAddModal(true)}>
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Add Your First Contact
+                                </Button>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Add/Edit Modal */}
+                {showAddModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                        <Card className="w-full max-w-md">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle>{editingContact ? 'Edit Contact' : 'Add Contact'}</CardTitle>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setShowAddModal(false);
+                                            setEditingContact(null);
+                                            setFormData({ name: '', email: '', phone: '', type: 'other', notes: '' });
+                                        }}
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <CardDescription>Fill in the contact details</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="name">Name *</Label>
+                                        <Input
+                                            id="name"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder="Friend's name"
+                                            required
+                                        />
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleAcceptRequest(request._id)}
-                                            className="bg-green-500 hover:bg-green-600"
+
+                                    <div>
+                                        <Label htmlFor="email">Email *</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            placeholder="email@example.com"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="phone">Phone</Label>
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            placeholder="+92 300 1234567"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="type">Type *</Label>
+                                        <select
+                                            id="type"
+                                            value={formData.type}
+                                            onChange={(e) => setFormData({ ...formData, type: e.target.value as Contact['type'] })}
+                                            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-sm"
                                         >
-                                            <Check className="w-4 h-4 mr-1" />
-                                            Accept
-                                        </Button>
+                                            {contactTypes.map(type => (
+                                                <option key={type.value} value={type.value}>{type.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="notes">Notes</Label>
+                                        <textarea
+                                            id="notes"
+                                            value={formData.notes}
+                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                            placeholder="Any additional notes..."
+                                            rows={3}
+                                            className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
                                         <Button
-                                            size="sm"
+                                            type="button"
                                             variant="outline"
-                                            onClick={() => handleRemoveFriend(request._id)}
-                                            className="border-red-500 text-red-500 hover:bg-red-50"
+                                            onClick={() => {
+                                                setShowAddModal(false);
+                                                setEditingContact(null);
+                                                setFormData({ name: '', email: '', phone: '', type: 'other', notes: '' });
+                                            }}
+                                            className="flex-1"
                                         >
-                                            <X className="w-4 h-4 mr-1" />
-                                            Decline
+                                            Cancel
+                                        </Button>
+                                        <Button type="submit" className="flex-1">
+                                            {editingContact ? 'Update' : 'Add'} Contact
                                         </Button>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
                 )}
-
-                {/* Sent Friend Requests */}
-                {sentRequests.length > 0 && (
-                    <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <Clock className="w-5 h-5" />
-                            Sent Requests ({sentRequests.length})
-                        </h2>
-                        <div className="space-y-3">
-                            {sentRequests.map((request) => (
-                                <div
-                                    key={request._id}
-                                    className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold">
-                                            {request.friend.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{request.friend.name}</p>
-                                            <p className="text-sm text-gray-600">{request.friend.email}</p>
-                                            <p className="text-xs text-gray-500">Pending</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleRemoveFriend(request._id)}
-                                        className="border-red-500 text-red-500 hover:bg-red-50"
-                                    >
-                                        <X className="w-4 h-4 mr-1" />
-                                        Cancel
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                )}
-
-                {/* Accepted Friends */}
-                <Card className="p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <UserCheck className="w-5 h-5" />
-                        My Friends ({acceptedFriends.length})
-                    </h2>
-                    {acceptedFriends.length === 0 ? (
-                        <p className="text-gray-500 text-center py-8">No friends yet. Add some friends to get started!</p>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {acceptedFriends.map((friend) => (
-                                <div
-                                    key={friend._id}
-                                    className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                                            {friend.friend.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{friend.friend.name}</p>
-                                            <p className="text-sm text-gray-600">{friend.friend.email}</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleRemoveFriend(friend._id)}
-                                        className="border-red-500 text-red-500 hover:bg-red-50"
-                                    >
-                                        <UserX className="w-4 h-4 mr-1" />
-                                        Remove
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </Card>
             </div>
         </div>
     );

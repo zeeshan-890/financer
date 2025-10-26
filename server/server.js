@@ -33,6 +33,7 @@ app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
 app.use('/api/friends', require('./routes/friendRoutes'));
+app.use('/api/contacts', require('./routes/contactRoutes'));
 app.use('/api/reserved-money', require('./routes/reservedMoneyRoutes'));
 app.use('/api/payment-requests', require('./routes/paymentRequestRoutes'));
 

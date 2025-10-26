@@ -198,7 +198,7 @@ export default function TransactionsPage() {
 
                                         <div className="flex items-center gap-4">
                                             <p className={`text-lg font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString()}
+                                                {tx.type === 'income' ? '+' : '-'}{Math.abs(tx.amount).toLocaleString()}
                                             </p>
                                             <Button onClick={() => handleDelete(tx._id)} variant="ghost" size="icon" className="text-red-500 hover:text-red-700">
                                                 <Trash2 className="h-4 w-4" />

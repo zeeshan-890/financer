@@ -35,7 +35,7 @@ exports.sendReminderEmail = async (reminder) => {
     const toUserName = reminder.toUser?.name || 'there';
     const amount = reminder.amount || 0;
 
-    const subject = `⏰ Payment Reminder: ₹${amount.toLocaleString()} Due`;
+    const subject = `⏰ Payment Reminder: Rs${amount.toLocaleString()} Due`;
     const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
             <!-- Header -->
@@ -55,7 +55,7 @@ exports.sendReminderEmail = async (reminder) => {
                 <div style="background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 25px; margin: 20px 0;">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <p style="color: #92400E; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Amount Due</p>
-                        <p style="color: #F59E0B; font-size: 36px; font-weight: bold; margin: 0;">₹${amount.toLocaleString()}</p>
+                        <p style="color: #F59E0B; font-size: 36px; font-weight: bold; margin: 0;">Rs${amount.toLocaleString()}</p>
                     </div>
 
                     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #FCD34D;">
@@ -171,11 +171,11 @@ exports.sendExpenseNotification = async (friendEmail, friendName, paidByName, ex
                         <div style="display: table-row;">
                             <div style="display: table-cell; padding: 15px; background: #ffffff; border-radius: 8px; width: 50%; border-right: 10px solid #F9FAFB;">
                                 <p style="color: #6B7280; font-size: 14px; margin: 0 0 5px 0;">Total Amount</p>
-                                <p style="color: #111827; font-size: 24px; font-weight: bold; margin: 0;">₹${amount.toLocaleString()}</p>
+                                <p style="color: #111827; font-size: 24px; font-weight: bold; margin: 0;">Rs${amount.toLocaleString()}</p>
                             </div>
                             <div style="display: table-cell; padding: 15px; background: #FEF3C7; border-radius: 8px; width: 50%;">
                                 <p style="color: #92400E; font-size: 14px; margin: 0 0 5px 0;">Your Share</p>
-                                <p style="color: #F59E0B; font-size: 24px; font-weight: bold; margin: 0;">₹${yourShare.toLocaleString()}</p>
+                                <p style="color: #F59E0B; font-size: 24px; font-weight: bold; margin: 0;">Rs${yourShare.toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -189,7 +189,7 @@ exports.sendExpenseNotification = async (friendEmail, friendName, paidByName, ex
                 <!-- Call to Action -->
                 <div style="background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 15px; border-radius: 8px; margin: 30px 0;">
                     <p style="color: #1E40AF; font-size: 14px; margin: 0; font-weight: 500;">
-                        📌 Please settle your share of <strong>₹${yourShare.toLocaleString()}</strong> with ${paidByName}.
+                        📌 Please settle your share of <strong>Rs${yourShare.toLocaleString()}</strong> with ${paidByName}.
                     </p>
                 </div>
 
@@ -235,7 +235,7 @@ exports.sendPaymentRequestEmail = async ({ toEmail, toName, fromName, amount, re
     console.log('Amount:', amount);
     console.log('Reason:', reason);
 
-    const subject = `💰 Payment Request: ₹${amount.toLocaleString()} - ${reason}`;
+    const subject = `💰 Payment Request: Rs ${amount.toLocaleString()} - ${reason}`;
 
     const dueDateText = dueDate
         ? `<div style="margin-top: 15px;">
@@ -290,7 +290,7 @@ exports.sendPaymentRequestEmail = async ({ toEmail, toName, fromName, amount, re
                 <div style="background: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 25px; margin: 20px 0;">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <p style="color: #065F46; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Amount Requested</p>
-                        <p style="color: #10B981; font-size: 36px; font-weight: bold; margin: 0;">₹${amount.toLocaleString()}</p>
+                        <p style="color: #10B981; font-size: 36px; font-weight: bold; margin: 0;">Rs${amount.toLocaleString()}</p>
                     </div>
 
                     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #86EFAC;">

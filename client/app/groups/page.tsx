@@ -315,7 +315,7 @@ export default function GroupExpensesPage() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                                                    ₹{(expense.amount || 0).toLocaleString()}
+                                                    Pkr{(expense.amount || 0).toLocaleString()}
                                                 </p>
                                                 <Button
                                                     size="sm"
@@ -341,13 +341,13 @@ export default function GroupExpensesPage() {
                                             <div>
                                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">You paid</p>
                                                 <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                                                    ₹{(expense.amount || 0).toLocaleString()}
+                                                    Pkr{(expense.amount || 0).toLocaleString()}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">To receive back</p>
                                                 <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                                                    ₹{expense.splitBetween?.reduce((sum, split) => sum + (split.status === 'pending' ? (split.amountOwed || 0) : 0), 0).toLocaleString() || 0}
+                                                    {expense.splitBetween?.reduce((sum, split) => sum + (split.status === 'pending' ? (split.amountOwed || 0) : 0), 0).toLocaleString() || 0}
                                                 </p>
                                             </div>
                                         </div>
@@ -384,7 +384,7 @@ export default function GroupExpensesPage() {
                                                     <div className="flex items-center gap-3">
                                                         <div className="text-right">
                                                             <p className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                                                                ₹{(split.amountOwed || 0).toLocaleString()}
+                                                                Pkr{(split.amountOwed || 0).toLocaleString()}
                                                             </p>
                                                             {split.status === 'paid' && split.paidAt ? (
                                                                 <p className="text-xs text-green-600 dark:text-green-400">
@@ -453,7 +453,7 @@ export default function GroupExpensesPage() {
 
                                     {/* Total Amount */}
                                     <div>
-                                        <Label htmlFor="amount">Total Amount (₹) *</Label>
+                                        <Label htmlFor="amount">Total Amount (Pkr) *</Label>
                                         <Input
                                             id="amount"
                                             type="number"
@@ -633,13 +633,13 @@ export default function GroupExpensesPage() {
                                                                 {selectedFriends.length + 1} people total (you + {selectedFriends.length} {selectedFriends.length === 1 ? 'friend' : 'friends'})
                                                             </span>
                                                             <span className="font-medium text-blue-700 dark:text-blue-300">
-                                                                ₹{(parseFloat(totalAmount) / (selectedFriends.length + 1)).toFixed(2)} per person
+                                                                Pkr{(parseFloat(totalAmount) / (selectedFriends.length + 1)).toFixed(2)} per person
                                                             </span>
                                                         </div>
                                                         <div className="flex justify-between text-sm pt-2 border-t border-blue-200 dark:border-blue-800">
                                                             <span className="text-zinc-700 dark:text-zinc-300 font-medium">Your share:</span>
                                                             <span className="font-bold text-orange-700 dark:text-orange-300">
-                                                                ₹{(parseFloat(totalAmount) / (selectedFriends.length + 1)).toFixed(2)}
+                                                                Pkr{(parseFloat(totalAmount) / (selectedFriends.length + 1)).toFixed(2)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -651,13 +651,13 @@ export default function GroupExpensesPage() {
                                                                 ? 'text-blue-700 dark:text-blue-300'
                                                                 : 'text-red-700 dark:text-red-300'
                                                                 }`}>
-                                                                ₹{totalCustomAmount.toFixed(2)}
+                                                                Pkr{totalCustomAmount.toFixed(2)}
                                                             </span>
                                                         </div>
                                                         <div className="flex justify-between text-sm pt-2 border-t border-blue-200 dark:border-blue-800">
                                                             <span className="text-zinc-700 dark:text-zinc-300 font-medium">Your share (paid upfront):</span>
                                                             <span className="font-bold text-orange-700 dark:text-orange-300">
-                                                                ₹{(parseFloat(totalAmount) - totalCustomAmount).toFixed(2)}
+                                                                Pkr{(parseFloat(totalAmount) - totalCustomAmount).toFixed(2)}
                                                             </span>
                                                         </div>
                                                     </div>

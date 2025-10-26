@@ -203,7 +203,7 @@ export default function GoalsPage() {
                                         <div className="space-y-3">
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-zinc-600 dark:text-zinc-400">
-                                                    ₹{goal.savedAmount.toLocaleString()} of ₹{goal.targetAmount.toLocaleString()}
+                                                    Pkr{goal.savedAmount.toLocaleString()} of Pkr{goal.targetAmount.toLocaleString()}
                                                 </span>
                                                 <span className="font-medium">{Math.min(progress, 100).toFixed(0)}%</span>
                                             </div>
@@ -223,7 +223,7 @@ export default function GoalsPage() {
                                                         {goal.history.slice().reverse().map((entry, idx) => (
                                                             <div key={idx} className="text-xs flex justify-between items-start bg-zinc-100 dark:bg-zinc-800 p-2 rounded">
                                                                 <div>
-                                                                    <p className="font-medium text-zinc-900 dark:text-zinc-50">₹{entry.amount.toLocaleString()}</p>
+                                                                    <p className="font-medium text-zinc-900 dark:text-zinc-50">Pkr{entry.amount.toLocaleString()}</p>
                                                                     {entry.note && <p className="text-zinc-500 dark:text-zinc-400 italic">{entry.note}</p>}
                                                                 </div>
                                                                 <p className="text-zinc-500 dark:text-zinc-400">
@@ -293,7 +293,7 @@ export default function GoalsPage() {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="targetAmount">Target Amount (₹) *</Label>
+                                        <Label htmlFor="targetAmount">Target Amount (Pkr) *</Label>
                                         <Input
                                             id="targetAmount"
                                             type="number"
@@ -345,13 +345,13 @@ export default function GoalsPage() {
                             <CardHeader>
                                 <CardTitle>Add Funds to {selectedGoal.title}</CardTitle>
                                 <CardDescription>
-                                    Current: ₹{selectedGoal.savedAmount.toLocaleString()} / ₹{selectedGoal.targetAmount.toLocaleString()}
+                                    Current: Pkr{selectedGoal.savedAmount.toLocaleString()} / Pkr{selectedGoal.targetAmount.toLocaleString()}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
                                     <div>
-                                        <Label htmlFor="fundsAmount">Amount to Add (₹) *</Label>
+                                        <Label htmlFor="fundsAmount">Amount to Add (Pkr) *</Label>
                                         <Input
                                             id="fundsAmount"
                                             type="number"
@@ -361,7 +361,7 @@ export default function GoalsPage() {
                                         />
                                         {fundsAmount && (
                                             <p className="text-sm text-zinc-500 mt-2">
-                                                New total: ₹{(selectedGoal.savedAmount + parseFloat(fundsAmount)).toLocaleString()}
+                                                New total: Pkr{(selectedGoal.savedAmount + parseFloat(fundsAmount)).toLocaleString()}
                                             </p>
                                         )}
                                     </div>

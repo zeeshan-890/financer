@@ -117,7 +117,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                         </div>
 
                         <div>
-                            <Label htmlFor="amount">Amount (₹) *</Label>
+                            <Label htmlFor="amount">Amount (Pkr) *</Label>
                             <Input
                                 id="amount"
                                 type="number"

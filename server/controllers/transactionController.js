@@ -53,7 +53,7 @@ exports.addTransaction = asyncHandler(async (req, res) => {
                         toUser: split.userId,
                         fromUser: req.user.id,
                         amount: split.amountOwed,
-                        message: `You owe ₹${split.amountOwed} to ${req.user.name} for ${title}`,
+                        message: `You owe Pkr ${split.amountOwed} to ${req.user.name} for ${title}`,
                         active: true,
                     });
                 }

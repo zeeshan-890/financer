@@ -64,8 +64,7 @@ export default function Sidebar() {
 
             {/* Sidebar */}
             <aside
-                className={`fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 ${collapsed ? 'w-16' : 'w-64'
-                    } ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+                className={`${mobileOpen ? 'fixed left-0 top-0 z-40 h-screen translate-x-0' : 'fixed left-0 top-0 z-40 h-screen -translate-x-full'} lg:static lg:translate-x-0 lg:h-screen transition-all duration-300 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 ${collapsed ? 'w-16' : 'w-64'}`}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo & Toggle */}
@@ -99,7 +98,7 @@ export default function Sidebar() {
                                         } ${collapsed ? 'justify-center' : ''}`}
                                     title={collapsed ? item.label : undefined}
                                 >
-                                    <Icon className="h-5 w-5 flex-shrink-0" />
+                                    <Icon className="h-5 w-5 shrink-0" />
                                     {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
                                 </Link>
                             );
@@ -143,8 +142,7 @@ export default function Sidebar() {
                 </div>
             </aside>
 
-            {/* Main content spacer */}
-            <div className={`hidden lg:block transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`} />
+            {/* Note: spacer removed - layout now uses flex container in RootLayout; sidebar is static on large screens and overlays only on mobile */}
         </>
     );
 }

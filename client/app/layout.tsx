@@ -19,8 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Sidebar />
-        {children}
+        <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-900">
+          <Sidebar />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
         <Toaster position="top-right" />
       </body>
     </html>

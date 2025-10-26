@@ -6,13 +6,15 @@ const {
     sendFriendRequest,
     acceptFriendRequest,
     removeFriend,
-    searchUsers
+    searchUsers,
+    addFriendManually
 } = require('../controllers/friendController');
 
 router.use(protect);
 
 router.get('/', getAllFriends);
 router.post('/', sendFriendRequest);
+router.post('/manual', addFriendManually);
 router.put('/:id/accept', acceptFriendRequest);
 router.delete('/:id', removeFriend);
 router.get('/search', searchUsers);

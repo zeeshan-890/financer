@@ -3,6 +3,7 @@ const Transaction = require('../models/Transaction');
 const Group = require('../models/Group');
 const User = require('../models/User');
 const Reminder = require('../models/Reminder');
+const ReservedMoney = require('../models/ReservedMoney');
 const { sendExpenseNotification } = require('../services/emailService');
 
 exports.addTransaction = asyncHandler(async (req, res) => {
@@ -164,6 +165,13 @@ exports.getTransactionStats = asyncHandler(async (req, res) => {
     // Get all user transactions
     const transactions = await Transaction.find({ userId });
 
+    // Get reserved money total
+    const reservedResult = await ReservedMoney.aggregate([
+        { $match: { userId: userId, status: 'reserved' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const reservedAmount = reservedResult.length > 0 ? reservedResult[0].total : 0;
+
     // Calculate totals
     const income = transactions
         .filter(t => t.type === 'income')
@@ -174,6 +182,7 @@ exports.getTransactionStats = asyncHandler(async (req, res) => {
         .reduce((sum, t) => sum + t.amount, 0);
 
     const balance = income - expenses;
+    const usableBalance = balance - reservedAmount;
 
     // Category breakdown
     const categoryData = {};
@@ -186,13 +195,17 @@ exports.getTransactionStats = asyncHandler(async (req, res) => {
             categoryData[t.category] += t.amount;
         });
 
-    // Monthly trends (last 3 months)
+    // Monthly trends (last 6 months)
     const monthlyData = [];
     const now = new Date();
 
-    for (let i = 2; i >= 0; i--) {
+    for (let i = 5; i >= 0; i--) {
         const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+
+        const monthIncome = transactions
+            .filter(t => t.type === 'income' && t.date >= monthDate && t.date <= monthEnd)
+            .reduce((sum, t) => sum + t.amount, 0);
 
         const monthExpenses = transactions
             .filter(t => t.type === 'expense' && t.date >= monthDate && t.date <= monthEnd)
@@ -200,7 +213,26 @@ exports.getTransactionStats = asyncHandler(async (req, res) => {
 
         monthlyData.push({
             month: monthDate.toLocaleString('default', { month: 'short' }),
+            income: monthIncome,
             expense: monthExpenses,
+        });
+    }
+
+    // Daily expense heatmap data (last 90 days)
+    const heatmapData = [];
+    for (let i = 89; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const dateStart = new Date(date.setHours(0, 0, 0, 0));
+        const dateEnd = new Date(date.setHours(23, 59, 59, 999));
+
+        const dayExpenses = transactions
+            .filter(t => t.type === 'expense' && t.date >= dateStart && t.date <= dateEnd)
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        heatmapData.push({
+            date: dateStart.toISOString().split('T')[0],
+            amount: dayExpenses,
         });
     }
 
@@ -208,8 +240,11 @@ exports.getTransactionStats = asyncHandler(async (req, res) => {
         income,
         expenses,
         balance,
+        reservedAmount,
+        usableBalance,
         categoryData,
         monthlyData,
+        heatmapData,
     });
 });
 

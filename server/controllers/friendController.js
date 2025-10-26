@@ -186,3 +186,49 @@ exports.searchUsers = async (req, res) => {
         res.status(500).json({ message: 'Error searching users' });
     }
 };
+
+// Add friend manually (without request/accept flow)
+exports.addFriendManually = async (req, res) => {
+    try {
+        const { name, email } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).json({ message: 'Name and email are required' });
+        }
+
+        // Check if friendship already exists with this email
+        const existingFriend = await Friend.findOne({
+            userId: req.user.id,
+            'friendId.email': email
+        });
+
+        if (existingFriend) {
+            return res.status(400).json({ message: 'Friend with this email already exists' });
+        }
+
+        const friend = new Friend({
+            userId: req.user.id,
+            friendId: { name, email }, // Store as embedded document
+            status: 'accepted', // Auto-accept for manual adds
+            acceptedAt: new Date()
+        });
+
+        await friend.save();
+
+        res.status(201).json({
+            _id: friend._id,
+            friend: {
+                _id: friend.friendId._id || friend._id,
+                name: friend.friendId.name || name,
+                email: friend.friendId.email || email
+            },
+            status: friend.status,
+            isSentByMe: true,
+            requestedAt: friend.requestedAt,
+            acceptedAt: friend.acceptedAt
+        });
+    } catch (error) {
+        console.error('Error adding friend manually:', error);
+        res.status(500).json({ message: 'Error adding friend' });
+    }
+};

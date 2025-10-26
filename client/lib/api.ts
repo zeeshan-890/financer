@@ -75,6 +75,7 @@ export const userApi = {
 export const friendApi = {
     getAll: () => api.get('/friends'),
     sendRequest: (data: { email: string }) => api.post('/friends', data),
+    addManual: (data: { name: string; email: string }) => api.post('/friends/manual', data),
     acceptRequest: (id: string) => api.put(`/friends/${id}/accept`),
     remove: (id: string) => api.delete(`/friends/${id}`),
     searchUsers: (email: string) => api.get(`/friends/search?email=${email}`),

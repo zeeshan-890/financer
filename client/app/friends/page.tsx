@@ -5,7 +5,8 @@ import { friendApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { UserPlus, UserCheck, UserX, Search, Mail, Check, X, Clock } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { UserPlus, UserCheck, UserX, Search, Mail, Check, X, Clock, Plus } from 'lucide-react';
 
 interface Friend {
     _id: string;
@@ -28,6 +29,8 @@ export default function FriendsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showManualAdd, setShowManualAdd] = useState(false);
+    const [manualFriend, setManualFriend] = useState({ name: '', email: '' });
 
     useEffect(() => {
         fetchFriends();
@@ -84,6 +87,27 @@ export default function FriendsPage() {
         }
     };
 
+    const handleManualAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!manualFriend.name.trim() || !manualFriend.email.trim()) return;
+
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            await friendApi.addManual(manualFriend);
+            setSuccess('Friend added successfully!');
+            setManualFriend({ name: '', email: '' });
+            setShowManualAdd(false);
+            fetchFriends();
+        } catch (error: any) {
+            setError(error.response?.data?.message || 'Failed to add friend');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const filteredFriends = friends.filter(f =>
         f.friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         f.friend.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -96,7 +120,7 @@ export default function FriendsPage() {
     const receivedRequests = pendingRequests.filter(f => !f.isSentByMe);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6 lg:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -120,26 +144,65 @@ export default function FriendsPage() {
 
                 {/* Add Friend */}
                 <Card className="p-6">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <UserPlus className="w-5 h-5" />
-                        Add Friend
-                    </h2>
-                    <form onSubmit={handleSendRequest} className="flex gap-2">
-                        <div className="relative flex-1">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <Input
-                                type="email"
-                                placeholder="Enter friend's email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="pl-10"
-                                required
-                            />
+                    <h2 className="text-xl font-semibold mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <UserPlus className="w-5 h-5" />
+                            Add Friend
                         </div>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? 'Sending...' : 'Send Request'}
+                        <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => setShowManualAdd(!showManualAdd)}
+                        >
+                            <Plus className="w-4 h-4 mr-1" />
+                            {showManualAdd ? 'Send Request' : 'Add Manually'}
                         </Button>
-                    </form>
+                    </h2>
+                    
+                    {!showManualAdd ? (
+                        <form onSubmit={handleSendRequest} className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <Input
+                                    type="email"
+                                    placeholder="Enter friend's email address"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="pl-10"
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" disabled={loading}>
+                                {loading ? 'Sending...' : 'Send Request'}
+                            </Button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleManualAdd} className="space-y-4">
+                            <div>
+                                <Label>Friend's Name</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="Enter name"
+                                    value={manualFriend.name}
+                                    onChange={(e) => setManualFriend({ ...manualFriend, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label>Friend's Email</Label>
+                                <Input
+                                    type="email"
+                                    placeholder="Enter email"
+                                    value={manualFriend.email}
+                                    onChange={(e) => setManualFriend({ ...manualFriend, email: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" disabled={loading} className="w-full">
+                                {loading ? 'Adding...' : 'Add Friend'}
+                            </Button>
+                        </form>
+                    )}
                 </Card>
 
                 {/* Search */}

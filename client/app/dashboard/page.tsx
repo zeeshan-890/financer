@@ -107,7 +107,7 @@ export default function DashboardPage() {
                     <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
-                                <CardDescription className="text-blue-100">Total Balance</CardDescription>
+                                <CardDescription className="text-white">Total Balance</CardDescription>
                                 <Button
                                     size="sm"
                                     variant="ghost"
@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
                     <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                         <CardHeader className="pb-3">
-                            <CardDescription className="text-purple-100">Reserved Money</CardDescription>
+                            <CardDescription className="text-white">Reserved Money</CardDescription>
                             <CardTitle className="text-2xl sm:text-3xl">
                                 {balanceVisible ? `PKR ${stats?.reservedAmount.toLocaleString() || 0}` : '••••••'}
                             </CardTitle>
@@ -134,16 +134,16 @@ export default function DashboardPage() {
 
                     <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                         <CardHeader className="pb-3">
-                            <CardDescription className="text-green-100">Usable Balance</CardDescription>
+                            <CardDescription className="text-white">Usable Balance</CardDescription>
                             <CardTitle className="text-2xl sm:text-3xl">
                                 {balanceVisible ? `PKR ${stats?.usableBalance.toLocaleString() || 0}` : '••••••'}
                             </CardTitle>
                         </CardHeader>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                    <Card className="bg-gradient-to-br from-orange-700 to-red-700 text-white">
                         <CardHeader className="pb-3">
-                            <CardDescription className="text-orange-100">Total Expenses</CardDescription>
+                            <CardDescription className="text-white">Total Expenses</CardDescription>
                             <CardTitle className="text-2xl sm:text-3xl">PKR {stats?.expenses.toLocaleString() || 0}</CardTitle>
                         </CardHeader>
                     </Card>

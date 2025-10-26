@@ -149,7 +149,7 @@ export default function AccountsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Bank Accounts</h1>
+                        <h1 className="text-3xl font-bold text-gray-100">Bank Accounts</h1>
                         <p className="text-gray-600 mt-1">Manage your payment accounts for group expenses</p>
                     </div>
                     <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto">

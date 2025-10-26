@@ -1,4 +1,5 @@
 const ReservedMoney = require('../models/ReservedMoney');
+const User = require('../models/User');
 
 // Get all reserved money entries
 exports.getAllReserved = async (req, res) => {
@@ -6,7 +7,9 @@ exports.getAllReserved = async (req, res) => {
         const reserved = await ReservedMoney.find({
             userId: req.user.id,
             status: { $ne: 'cancelled' }
-        }).sort({ createdAt: -1 });
+        })
+            .populate('friendId', 'name email')
+            .sort({ createdAt: -1 });
 
         const totalReserved = reserved
             .filter(r => r.status === 'reserved')
@@ -25,27 +28,59 @@ exports.getAllReserved = async (req, res) => {
 // Create reserved money entry
 exports.createReserved = async (req, res) => {
     try {
-        const { amount, reason, recipientName, dueDate, notes } = req.body;
+        const { reservationType, friendId, amount, reason, recipientName, recipientEmail, dueDate, notes } = req.body;
 
-        if (!amount || !reason || !recipientName) {
-            return res.status(400).json({ message: 'Amount, reason, and recipient name are required' });
+        if (!amount || !reason) {
+            return res.status(400).json({ message: 'Amount and reason are required' });
         }
 
         if (amount <= 0) {
             return res.status(400).json({ message: 'Amount must be greater than 0' });
         }
 
-        const reserved = new ReservedMoney({
+        const reservedData = {
             userId: req.user.id,
+            reservationType: reservationType || 'custom',
             amount,
             reason,
             recipientName,
             dueDate,
             notes,
             status: 'reserved'
-        });
+        };
 
+        // If it's a friend reservation, validate and add friend info
+        if (reservationType === 'friend') {
+            if (!friendId) {
+                return res.status(400).json({ message: 'Friend ID is required for friend reservations' });
+            }
+
+            const friend = await User.findById(friendId);
+            if (!friend) {
+                return res.status(404).json({ message: 'Friend not found' });
+            }
+
+            reservedData.friendId = friendId;
+            reservedData.recipientName = friend.name;
+            reservedData.recipientEmail = friend.email;
+        } else {
+            // For custom reservations, recipient name is required
+            if (!recipientName) {
+                return res.status(400).json({ message: 'Item/thing name is required for custom reservations' });
+            }
+            if (recipientEmail) {
+                reservedData.recipientEmail = recipientEmail;
+            }
+        }
+
+        const reserved = new ReservedMoney(reservedData);
         await reserved.save();
+
+        // Populate friend info if it's a friend reservation
+        if (reservationType === 'friend') {
+            await reserved.populate('friendId', 'name email');
+        }
+
         res.status(201).json(reserved);
     } catch (error) {
         console.error('Error creating reserved money:', error);

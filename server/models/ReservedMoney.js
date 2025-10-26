@@ -6,6 +6,16 @@ const reservedMoneySchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    reservationType: {
+        type: String,
+        enum: ['friend', 'custom'],
+        required: true,
+        default: 'custom'
+    },
+    friendId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     amount: {
         type: Number,
         required: true,
@@ -19,6 +29,10 @@ const reservedMoneySchema = new mongoose.Schema({
     recipientName: {
         type: String,
         required: true,
+        trim: true
+    },
+    recipientEmail: {
+        type: String,
         trim: true
     },
     dueDate: {

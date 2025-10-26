@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { reservedMoneyApi } from '@/lib/api';
+import { reservedMoneyApi, friendApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Wallet, Plus, Trash2, Check, X, Clock } from 'lucide-react';
+import { Wallet, Plus, Trash2, Check, X, Clock, User, Package } from 'lucide-react';
 
 interface ReservedMoney {
     _id: string;
+    reservationType: 'friend' | 'custom';
     amount: number;
     reason: string;
     recipientName: string;
+    recipientEmail?: string;
     dueDate?: string;
     notes?: string;
     status: 'reserved' | 'paid' | 'cancelled';
@@ -20,8 +22,19 @@ interface ReservedMoney {
     paidAt?: string;
 }
 
+interface Friend {
+    _id: string;
+    friend: {
+        _id: string;
+        name: string;
+        email: string;
+    };
+    status: string;
+}
+
 export default function ReservedMoneyPage() {
     const [reservedItems, setReservedItems] = useState<ReservedMoney[]>([]);
+    const [friends, setFriends] = useState<Friend[]>([]);
     const [totalReserved, setTotalReserved] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -29,16 +42,29 @@ export default function ReservedMoneyPage() {
     const [success, setSuccess] = useState('');
 
     const [formData, setFormData] = useState({
+        reservationType: 'custom',
+        friendId: '',
         amount: '',
         reason: '',
         recipientName: '',
+        recipientEmail: '',
         dueDate: '',
         notes: ''
     });
 
     useEffect(() => {
         fetchReservedMoney();
+        fetchFriends();
     }, []);
+
+    const fetchFriends = async () => {
+        try {
+            const response = await friendApi.getAll();
+            setFriends(response.data.filter((f: Friend) => f.status === 'accepted'));
+        } catch (err) {
+            console.error('Error fetching friends:', err);
+        }
+    };
 
     const fetchReservedMoney = async () => {
         try {
@@ -57,13 +83,33 @@ export default function ReservedMoneyPage() {
         setSuccess('');
 
         try {
-            await reservedMoneyApi.create({
+            const payload: {
+                reservationType: string;
+                friendId?: string;
+                amount: number;
+                reason: string;
+                recipientName: string;
+                recipientEmail?: string;
+                dueDate?: Date;
+                notes?: string;
+            } = {
+                reservationType: formData.reservationType,
                 amount: parseFloat(formData.amount),
                 reason: formData.reason,
                 recipientName: formData.recipientName,
                 dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
                 notes: formData.notes
-            });
+            };
+
+            if (formData.reservationType === 'friend' && formData.friendId) {
+                payload.friendId = formData.friendId;
+            }
+
+            if (formData.recipientEmail) {
+                payload.recipientEmail = formData.recipientEmail;
+            }
+
+            await reservedMoneyApi.create(payload);
             setSuccess('Reserved money added successfully!');
             fetchReservedMoney();
             handleCloseModal();
@@ -110,12 +156,27 @@ export default function ReservedMoneyPage() {
     const handleCloseModal = () => {
         setShowModal(false);
         setFormData({
+            reservationType: 'custom',
+            friendId: '',
             amount: '',
             reason: '',
             recipientName: '',
+            recipientEmail: '',
             dueDate: '',
             notes: ''
         });
+    };
+
+    const handleFriendSelect = (friendId: string) => {
+        const selectedFriend = friends.find(f => f._id === friendId);
+        if (selectedFriend) {
+            setFormData({
+                ...formData,
+                friendId: friendId,
+                recipientName: selectedFriend.friend.name,
+                recipientEmail: selectedFriend.friend.email
+            });
+        }
     };
 
     const activeReserved = reservedItems.filter(item => item.status === 'reserved');
@@ -127,7 +188,7 @@ export default function ReservedMoneyPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Reserved Money</h1>
+                        <h1 className="text-3xl font-bold text-gray-100">Reserved Money</h1>
                         <p className="text-gray-600 mt-1">Track money you need to pay to others</p>
                     </div>
                     <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto">
@@ -177,8 +238,21 @@ export default function ReservedMoneyPage() {
                                     <div className="flex-1">
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
-                                                <h3 className="font-semibold text-gray-900">{item.reason}</h3>
-                                                <p className="text-sm text-gray-600">To: {item.recipientName}</p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    {item.reservationType === 'friend' ? (
+                                                        <User className="w-4 h-4 text-blue-500" />
+                                                    ) : (
+                                                        <Package className="w-4 h-4 text-purple-500" />
+                                                    )}
+                                                    <h3 className="font-semibold text-gray-900">{item.reason}</h3>
+                                                </div>
+                                                <p className="text-sm text-gray-600">
+                                                    {item.reservationType === 'friend' ? 'Friend: ' : 'For: '}
+                                                    {item.recipientName}
+                                                </p>
+                                                {item.recipientEmail && (
+                                                    <p className="text-xs text-gray-500">{item.recipientEmail}</p>
+                                                )}
                                             </div>
                                             <p className="text-lg font-bold text-purple-600">PKR {item.amount.toLocaleString()}</p>
                                         </div>
@@ -257,6 +331,53 @@ export default function ReservedMoneyPage() {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
+                                    <Label>Reservation Type</Label>
+                                    <div className="grid grid-cols-2 gap-2 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, reservationType: 'friend', recipientName: '', recipientEmail: '', friendId: '' })}
+                                            className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${formData.reservationType === 'friend'
+                                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <User className="w-5 h-5" />
+                                            <span className="font-medium">Friend</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, reservationType: 'custom', recipientName: '', recipientEmail: '', friendId: '' })}
+                                            className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${formData.reservationType === 'custom'
+                                                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <Package className="w-5 h-5" />
+                                            <span className="font-medium">Custom</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {formData.reservationType === 'friend' && (
+                                    <div>
+                                        <Label>Select Friend</Label>
+                                        <select
+                                            value={formData.friendId}
+                                            onChange={(e) => handleFriendSelect(e.target.value)}
+                                            className="w-full p-2 border rounded-md"
+                                            required
+                                        >
+                                            <option value="">Choose a friend...</option>
+                                            {friends.map((friend) => (
+                                                <option key={friend._id} value={friend._id}>
+                                                    {friend.friend.name} ({friend.friend.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div>
                                     <Label>Amount (PKR)</Label>
                                     <Input
                                         type="number"
@@ -274,21 +395,35 @@ export default function ReservedMoneyPage() {
                                         type="text"
                                         value={formData.reason}
                                         onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                                        placeholder="What is this for?"
+                                        placeholder={formData.reservationType === 'friend' ? 'e.g., Borrowed money, Group expense' : 'e.g., Buying book, Course fee'}
                                         required
                                     />
                                 </div>
 
-                                <div>
-                                    <Label>Recipient Name</Label>
-                                    <Input
-                                        type="text"
-                                        value={formData.recipientName}
-                                        onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                                        placeholder="Who will you pay?"
-                                        required
-                                    />
-                                </div>
+                                {formData.reservationType === 'custom' && (
+                                    <div>
+                                        <Label>Item/Thing Name</Label>
+                                        <Input
+                                            type="text"
+                                            value={formData.recipientName}
+                                            onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
+                                            placeholder="e.g., University Book, Online Course, Equipment"
+                                            required
+                                        />
+                                    </div>
+                                )}
+
+                                {formData.reservationType === 'friend' && (
+                                    <div>
+                                        <Label>Friend Name (Auto-filled)</Label>
+                                        <Input
+                                            type="text"
+                                            value={formData.recipientName}
+                                            readOnly
+                                            className="bg-gray-50"
+                                        />
+                                    </div>
+                                )}
 
                                 <div>
                                     <Label>Due Date (Optional)</Label>

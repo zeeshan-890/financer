@@ -95,7 +95,16 @@ export const bankAccountApi = {
 // Reserved Money API
 export const reservedMoneyApi = {
     getAll: () => api.get('/reserved-money'),
-    create: (data: { amount: number; reason: string; recipientName: string; dueDate?: Date; notes?: string }) =>
+    create: (data: {
+        reservationType: string;
+        friendId?: string;
+        amount: number;
+        reason: string;
+        recipientName: string;
+        recipientEmail?: string;
+        dueDate?: Date;
+        notes?: string;
+    }) =>
         api.post('/reserved-money', data),
     update: (id: string, data: { amount?: number; reason?: string; recipientName?: string; dueDate?: Date; notes?: string; status?: string }) =>
         api.put(`/reserved-money/${id}`, data),

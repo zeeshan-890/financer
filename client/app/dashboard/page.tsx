@@ -209,8 +209,8 @@ export default function DashboardPage() {
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="h-5 w-5 text-green-600" />
                                 <div>
-                                    <CardDescription>Total Income</CardDescription>
-                                    <CardTitle className="text-2xl text-green-600">PKR {stats?.income.toLocaleString() || 0}</CardTitle>
+                                    <CardDescription>Current Balance</CardDescription>
+                                    <CardTitle className="text-2xl text-green-600">PKR {stats?.usableBalance.toLocaleString() || 0}</CardTitle>
                                 </div>
                             </div>
                         </CardHeader>
@@ -390,8 +390,8 @@ export default function DashboardPage() {
                                     <div
                                         key={index}
                                         className={`aspect-square rounded-lg ${bgColor} flex flex-col items-center justify-center border ${isToday
-                                                ? 'border-blue-500 border-2 ring-2 ring-blue-200 dark:ring-blue-800'
-                                                : 'border-zinc-300 dark:border-zinc-700'
+                                            ? 'border-blue-500 border-2 ring-2 ring-blue-200 dark:ring-blue-800'
+                                            : 'border-zinc-300 dark:border-zinc-700'
                                             } cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all`}
                                         title={`${dayData.date}: PKR ${dayData.amount.toLocaleString()}`}
                                     >
